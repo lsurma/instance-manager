@@ -4,6 +4,7 @@
     <option name="locations">
       <list>
         <option value="$PROJECT_DIR$/Lokalizer.Host.WA/bin/Release/net9.0/win-x64/publish" />
+        <option value="$PROJECT_DIR$/InstanceManager.Host.WA/bin/Release/net9.0/publish" />
       </list>
     </option>
   </component>
