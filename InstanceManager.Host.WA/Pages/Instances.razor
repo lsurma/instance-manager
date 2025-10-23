@@ -1,0 +1,22 @@
+﻿@page "/instances"
+
+<FluentTreeView Items="Items" />
+
+
+@code {
+    
+    private List<ITreeViewItem> Items = new()
+    {
+        new TreeViewItem()
+        {
+            Text = "Nazwa 1",
+            
+            Items = new List<ITreeViewItem>()
+            {
+                new TreeViewItem() { Text = "Podpozycja 1.1" },
+                new TreeViewItem() { Text = "Podpozycja 1.2" },
+            }
+            
+        },
+    };
+}

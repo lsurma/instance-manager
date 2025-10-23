@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using InstanceManager.Application.Contracts
+@using Radzen.Blazor
 
 <PageTitle>Home</PageTitle>
 
@@ -9,6 +10,7 @@ Welcome to your new Fluent Blazor app.
 
 <button @onclick="SendTestRequest">Hello</button>
 
+<RadzenButton Click="SendTestRequest">test btn</RadzenButton>
 
 @code {
     [Inject]
