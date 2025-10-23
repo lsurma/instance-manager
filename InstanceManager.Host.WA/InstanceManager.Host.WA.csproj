@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <PublishTrimmed>true</PublishTrimmed>
+        <TrimMode>link</TrimMode>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.6"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.6" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.12.1"/>
+        <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.12.1"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\InstanceManager.Application.Contracts\InstanceManager.Application.Contracts.csproj" />
+    </ItemGroup>
+
+</Project>

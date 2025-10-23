@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "InstanceManager.Host.AzFuncAPI": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7093",
+      "launchBrowser": false
+    }
+  }
+}

@@ -1,0 +1,21 @@
+﻿@page "/"
+@using InstanceManager.Application.Contracts
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new Fluent Blazor app.
+
+<button @onclick="SendTestRequest"></button>
+
+
+@code {
+    [Inject]
+    protected IRequestSender RequestSender { get; set; } = null!;
+
+    private async Task SendTestRequest(MouseEventArgs arg)
+    {
+        var xx = await RequestSender.SendAsync<GetWeatherForecastsRequest>(new GetWeatherForecastsRequest());
+    }
+}
