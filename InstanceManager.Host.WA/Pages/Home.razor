@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using InstanceManager.Application.Contracts
+@using InstanceManager.Application.Contracts.ProjectInstance
 @using Radzen.Blazor
 
 <PageTitle>Home</PageTitle>
@@ -12,12 +13,22 @@ Welcome to your new Fluent Blazor app.
 
 <RadzenButton Click="SendTestRequest">test btn</RadzenButton>
 
+<textarea style="width:100%; height:400px;">
+@System.Text.Json.JsonSerializer.Serialize(ProjectInstances, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })
+</textarea>
+
 @code {
     [Inject]
     protected IRequestSender RequestSender { get; set; } = null!;
 
+    protected  List<ProjectInstanceDto>ProjectInstances { get; set; } = new(); 
+    
     private async Task SendTestRequest(MouseEventArgs arg)
     {
-        var xx = await RequestSender.SendAsync<GetWeatherForecastsRequest>(new GetWeatherForecastsRequest());
+        ProjectInstances = await RequestSender.SendAsync(new GetAllProjectInstancesQuery());
+
+        _ = 1;
+
+        return;
     }
 }

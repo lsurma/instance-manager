@@ -1,30 +1,91 @@
-﻿using InstanceManager.Application.Core.Data;
+﻿using InstanceManager.Host.AzFuncAPI.Services;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace InstanceManager.Host.AzFuncAPI.Controllers;
 
 public class QueryController
 {
     private readonly ILogger<QueryController> _logger;
-    private readonly InstanceManagerDbContext _context;
+    private readonly IMediator _mediator;
+    private readonly RequestRegistry _requestRegistry;
 
-    public QueryController(ILogger<QueryController> logger, InstanceManagerDbContext context)
+    public QueryController(ILogger<QueryController> logger, IMediator mediator, RequestRegistry requestRegistry)
     {
         _logger = logger;
-        _context = context;
+        _mediator = mediator;
+        _requestRegistry = requestRegistry;
     }
 
     [Function("Query")]
-    public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req)
+    public async Task<IActionResult> Query(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "query/{requestName}")] HttpRequest req,
+        string requestName
+    )
     {
-        _logger.LogInformation("C# HTTP trigger function processed a request.");
+        var bodyJson = req.Query["body"].ToString();
 
-        string[] weatherForecasts = [];
-        
-        return new JsonResult(weatherForecasts);
+        if (string.IsNullOrWhiteSpace(requestName))
+        {
+            return new BadRequestObjectResult(new { error = "Request name is required." });
+        }
+
+        _logger.LogInformation("Processing request: {RequestName}", requestName);
+
+        try
+        {
+            var requestType = _requestRegistry.GetRequestType(requestName);
+            if (requestType == null)
+            {
+                return new NotFoundObjectResult(new
+                {
+                    error = $"Request '{requestName}' not found.",
+                    availableRequests = _requestRegistry.GetAllRequestNames()
+                });
+            }
+
+            // Deserialize body if provided, otherwise create empty instance
+            object? request;
+            if (!string.IsNullOrWhiteSpace(bodyJson))
+            {
+                request = JsonSerializer.Deserialize(bodyJson, requestType, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+            else
+            {
+                request = Activator.CreateInstance(requestType);
+            }
+
+            if (request == null)
+            {
+                return new BadRequestObjectResult(new { error = "Failed to create request instance." });
+            }
+
+            // Send through MediatR
+            var result = await _mediator.Send(request);
+
+            return new JsonResult(result, new JsonSerializerOptions()
+            {
+                ReferenceHandler = ReferenceHandler.IgnoreCycles
+            });
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Failed to deserialize request body for: {RequestName}", requestName);
+            return new BadRequestObjectResult(new { error = "Invalid JSON in body parameter.", details = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing request: {RequestName}", requestName);
+            return new BadRequestObjectResult(new { error = ex.Message });
+        }
     }
 
 }

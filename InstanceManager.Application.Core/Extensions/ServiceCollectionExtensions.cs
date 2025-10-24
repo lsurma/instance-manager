@@ -6,13 +6,16 @@ namespace InstanceManager.Application.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddInstanceManagerDatabase(this IServiceCollection services, string connectionString)
+    public static IServiceCollection AddInstanceManagerCore(this IServiceCollection services, string connectionString)
     {
         services.AddDbContext<InstanceManagerDbContext>(options =>
             options.UseSqlite(connectionString));
 
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly));
+
         return services;
     }
+
 
     public static async Task InitializeDatabaseAsync(this IServiceProvider serviceProvider)
     {

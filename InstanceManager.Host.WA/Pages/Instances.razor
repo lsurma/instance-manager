@@ -1,22 +1,25 @@
 ﻿@page "/instances"
 
-<FluentTreeView Items="Items" />
+<h3>Project Instances</h3>
 
-
-@code {
-    
-    private List<ITreeViewItem> Items = new()
-    {
-        new TreeViewItem()
-        {
-            Text = "Nazwa 1",
-            
-            Items = new List<ITreeViewItem>()
-            {
-                new TreeViewItem() { Text = "Podpozycja 1.1" },
-                new TreeViewItem() { Text = "Podpozycja 1.2" },
-            }
-            
-        },
-    };
+@if (IsLoading)
+{
+    <FluentProgressRing />
+    <p>Loading instances...</p>
+}
+else if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <FluentMessageBar Intent="MessageIntent.Error">
+        @ErrorMessage
+    </FluentMessageBar>
+}
+else if (!Items.Any())
+{
+    <FluentMessageBar Intent="MessageIntent.Info">
+        No instances found.
+    </FluentMessageBar>
+}
+else
+{
+    <FluentTreeView Items="Items" SelectedItemChanged="SelectedItemChanged" SelectedItem="SelectedItem" />
 }
