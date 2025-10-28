@@ -1,25 +1,41 @@
 ﻿@page "/instances"
+@using InstanceManager.Application.Contracts.ProjectInstance
 
-<h3>Project Instances</h3>
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+    <h3 style="margin: 0;">Project Instances</h3>
 
-@if (IsLoading)
-{
-    <FluentProgressRing />
-    <p>Loading instances...</p>
-}
-else if (!string.IsNullOrEmpty(ErrorMessage))
-{
-    <FluentMessageBar Intent="MessageIntent.Error">
-        @ErrorMessage
-    </FluentMessageBar>
-}
-else if (!Items.Any())
-{
-    <FluentMessageBar Intent="MessageIntent.Info">
-        No instances found.
-    </FluentMessageBar>
-}
-else
-{
-    <FluentTreeView Items="Items" SelectedItemChanged="SelectedItemChanged" SelectedItem="SelectedItem" />
-}
+    <FluentButton Appearance="Appearance.Accent" 
+                  IconStart="@(new Icons.Regular.Size20.Add())"
+                  OnClick="@(() => OpenInstancePanelAsync())" />
+        
+</FluentStack>
+    
+
+<FluentDivider Style="margin: 16px 0;" />
+
+<DataLoader TResponse="List<ProjectInstanceDto>"
+            Query="new GetAllProjectInstancesQuery()"
+            CacheKey="all_project_instances"
+            OnDataFetched="HandleDataFetched">
+    <LoadingContent>
+        <FluentProgressRing />
+        <p>Loading instances...</p>
+    </LoadingContent>
+    <ErrorContent Context="errorMessage">
+        <FluentMessageBar Intent="MessageIntent.Error">
+            @errorMessage
+        </FluentMessageBar>
+    </ErrorContent>
+    <ChildContent Context="instances">
+        @if (!Items.Any())
+        {
+            <FluentMessageBar Intent="MessageIntent.Info">
+                No instances found.
+            </FluentMessageBar>
+        }
+        else
+        {
+            <FluentTreeView Items="Items" SelectedItemChanged="SelectedItemChanged" SelectedItem="SelectedItem" />
+        }
+    </ChildContent>
+</DataLoader>

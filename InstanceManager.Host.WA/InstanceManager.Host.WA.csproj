@@ -20,4 +20,8 @@
       <ProjectReference Include="..\InstanceManager.Application.Contracts\InstanceManager.Application.Contracts.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Models\" />
+    </ItemGroup>
+
 </Project>

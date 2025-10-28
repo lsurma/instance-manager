@@ -1,0 +1,101 @@
+@typeparam TResponse
+@inject IRequestSender RequestSender
+@inject ILocalStorageService LocalStorage
+
+@if (IsLoading && Data == null)
+{
+    @LoadingContent
+}
+else if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    @ErrorContent(ErrorMessage)
+}
+else if (Data != null)
+{
+    @ChildContent(Data)
+}
+
+@code {
+    [Parameter]
+    public required object Query { get; set; }
+
+    [Parameter]
+    public string? CacheKey { get; set; }
+
+    [Parameter]
+    public RenderFragment? LoadingContent { get; set; }
+
+    [Parameter]
+    public RenderFragment<string>? ErrorContent { get; set; }
+
+    [Parameter]
+    public required RenderFragment<TResponse> ChildContent { get; set; }
+
+    [Parameter]
+    public EventCallback<TResponse> OnDataFetched { get; set; }
+
+    private TResponse? Data { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            IsLoading = true;
+            ErrorMessage = null;
+
+            var cacheKey = CacheKey ?? $"query_{Query.GetType().Name}";
+
+            // Try to load from cache first
+            var cachedData = await LocalStorage.GetItemAsync<TResponse>(cacheKey);
+            if (cachedData != null)
+            {
+                Data = cachedData;
+                IsLoading = false;
+
+                // Notify that cached data is available
+                if (OnDataFetched.HasDelegate)
+                {
+                    await OnDataFetched.InvokeAsync(cachedData);
+                }
+
+                StateHasChanged();
+            }
+
+            // Fetch fresh data from API
+            var freshData = await RequestSender.SendAsync<TResponse>(Query);
+
+            // Update cache
+            await LocalStorage.SetItemAsync(cacheKey, freshData);
+
+            // Update UI with fresh data
+            Data = freshData;
+            ErrorMessage = null;
+
+            // Notify that fresh data is available
+            if (OnDataFetched.HasDelegate)
+            {
+                await OnDataFetched.InvokeAsync(freshData);
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadDataAsync();
+    }
+}

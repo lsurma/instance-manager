@@ -45,7 +45,7 @@ public class SaveProjectInstanceCommandHandler : IRequestHandler<SaveProjectInst
                 Notes = request.Notes,
                 ParentProjectId = request.ParentProjectId,
                 CreatedAt = DateTimeOffset.UtcNow,
-                CreatedBy = request.CreatedBy
+                CreatedBy = "xx"
             };
 
             _context.ProjectInstances.Add(instance);

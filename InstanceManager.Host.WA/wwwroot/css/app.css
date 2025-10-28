@@ -1,5 +1,3 @@
-@import '_content/Microsoft.FluentUI.AspNetCore.Components/css/reboot.css';
-
 body {
     --body-font: "Segoe UI Variable", "Segoe UI", sans-serif;
     font-family: var(--body-font);
@@ -122,6 +120,15 @@ footer {
 
 code {
     color: #c02d76;
+}
+
+/* Fix for Fluent UI panel positioning - allow clicking through the positioning region */
+fluent-dialog[id^="panel-"] {
+    &::part(positioning-region) {
+        width: var(--dialog-width);
+        left: auto;
+        right : 0;    
+    }
 }
 
 @media (max-width: 600px) {

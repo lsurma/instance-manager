@@ -1,0 +1,72 @@
+@page "/instances-example"
+@using InstanceManager.Application.Contracts.ProjectInstance
+@using InstanceManager.Application.Contracts.Queries
+
+<h3>Project Instances (With DataLoader)</h3>
+
+<DataLoader TResponse="List<ProjectInstanceDto>"
+            Query="new GetAllProjectInstancesQuery()"
+            CacheKey="all_project_instances">
+    <LoadingContent>
+        <FluentProgressRing />
+        <p>Loading instances...</p>
+    </LoadingContent>
+    <ErrorContent Context="errorMessage">
+        <FluentMessageBar Intent="MessageIntent.Error">
+            @errorMessage
+        </FluentMessageBar>
+    </ErrorContent>
+    <ChildContent Context="instances">
+        @if (!instances.Any())
+        {
+            <FluentMessageBar Intent="MessageIntent.Info">
+                No instances found.
+            </FluentMessageBar>
+        }
+        else
+        {
+            <FluentTreeView Items="BuildTreeItems(instances)"
+                          SelectedItemChanged="SelectedItemChanged"
+                          SelectedItem="SelectedItem" />
+        }
+    </ChildContent>
+</DataLoader>
+
+@code {
+    private ITreeViewItem? SelectedItem { get; set; }
+
+    private List<ITreeViewItem> BuildTreeItems(List<ProjectInstanceDto> instances)
+    {
+        var rootItems = instances.Where(i => i.ParentProjectId == null).ToList();
+        return rootItems.Select(instance => CreateTreeItem(instance, instances)).ToList();
+    }
+
+    private ITreeViewItem CreateTreeItem(ProjectInstanceDto instance, List<ProjectInstanceDto> allInstances)
+    {
+        var treeItem = new TreeViewItem
+        {
+            Text = instance.Name,
+            Expanded = true,
+            Id = instance.Id.ToString(),
+        };
+
+        var children = allInstances.Where(i => i.ParentProjectId == instance.Id).ToList();
+
+        if (children.Any())
+        {
+            treeItem.Items = children.Select(child => CreateTreeItem(child, allInstances)).ToList();
+        }
+
+        return treeItem;
+    }
+
+    private void SelectedItemChanged(ITreeViewItem? item)
+    {
+        SelectedItem = item;
+
+        if (item != null)
+        {
+            Console.WriteLine($"Selected item: {item.Text} (ID: {item.Id})");
+        }
+    }
+}

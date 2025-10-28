@@ -15,6 +15,4 @@ public class SaveProjectInstanceCommand : IRequest<Guid>
     public string? Notes { get; set; }
 
     public Guid? ParentProjectId { get; set; }
-
-    public required string CreatedBy { get; set; }
 }

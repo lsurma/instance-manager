@@ -1,10 +1,10 @@
 namespace InstanceManager.Application.Contracts.ProjectInstance;
 
-public class ProjectInstanceDto
+public record ProjectInstanceDto
 {
     public Guid Id { get; set; }
 
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     public string? Description { get; set; }
 
@@ -22,5 +22,5 @@ public class ProjectInstanceDto
 
     public DateTimeOffset? UpdatedAt { get; set; }
 
-    public string CreatedBy { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
 }
