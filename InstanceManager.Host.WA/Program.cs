@@ -16,6 +16,7 @@ builder.Services.AddScoped(sp => new HttpClient
 });
 builder.Services.AddScoped<IRequestSender, HttpRequestSender>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+builder.Services.AddScoped<NavigationHelper>();
 
 builder.Services.AddFluentUIComponents();
 

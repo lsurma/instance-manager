@@ -10,7 +10,7 @@
                    />
         
     
-    <FluentNavLink Href="@(NavigationManager.ToAbsoluteUri("?q=test").ToString())">xxx</FluentNavLink>
+    <FluentNavLink Href="@NavHelper.BuildUrl("test", Guid.NewGuid().ToString())">Test button</FluentNavLink>
     
 </FluentStack>
     

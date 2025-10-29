@@ -1,5 +1,6 @@
 using InstanceManager.Application.Contracts.ProjectInstance;
 using InstanceManager.Host.WA.Components;
+using InstanceManager.Host.WA.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.FluentUI.AspNetCore.Components;
@@ -13,6 +14,9 @@ public partial class Instances : ComponentBase, IDisposable
     
     [Inject]
     private NavigationManager NavigationManager { get; set; } = default!;
+    
+    [Inject]
+    private NavigationHelper NavHelper { get; set; } = default!;
     
     private List<ITreeViewItem> Items { get; set; } = new();
     private ITreeViewItem? SelectedItem { get; set; }
