@@ -6,8 +6,12 @@
 
     <FluentButton Appearance="Appearance.Accent" 
                   IconStart="@(new Icons.Regular.Size20.Add())"
-                  OnClick="@(() => OpenInstancePanelAsync())" />
+                  OnClick="@(() => OpenInstancePanelAsync(null))"
+                   />
         
+    
+    <FluentNavLink Href="@(NavigationManager.ToAbsoluteUri("?q=test").ToString())">xxx</FluentNavLink>
+    
 </FluentStack>
     
 
@@ -16,6 +20,7 @@
 <DataLoader TResponse="List<ProjectInstanceDto>"
             Query="new GetAllProjectInstancesQuery()"
             CacheKey="all_project_instances"
+            RefreshToken="@_refreshToken"
             OnDataFetched="HandleDataFetched">
     <LoadingContent>
         <FluentProgressRing />

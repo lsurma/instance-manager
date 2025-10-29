@@ -1,80 +1,86 @@
 @using InstanceManager.Application.Contracts.ProjectInstance
 @implements IDialogContentComponent<InstancePanelParameters>
 
-@if (Content != null && Content.Instance != null)
-{
-    <FluentDialogBody>
-        <EditForm Model="Content.Instance" OnValidSubmit="HandleSubmitAsync">
-            <DataAnnotationsValidator />
+<FluentDialogBody>
+    <EditForm Model="Content.Instance" OnSubmit="@(() => HandleSubmitAsync(false))">
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
             
-            <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
-                
-                <FluentTextField @bind-Value="Content.Instance.Name"
-                                 Label="Name"
-                                 Required
-                                 Style="width: 100%;" />
-                
-                <FluentTextArea @bind-Value="Content.Instance.Description"
-                                Label="Description"
-                                Rows="3"
-                                Style="width: 100%;" />
-                
-                <FluentTextField @bind-Value="Content.Instance.MainHost"
-                                 Label="Main Host"
-                                 Placeholder="e.g., localhost:5000"
-                                 Style="width: 100%;" />
-                
-                <FluentTextArea @bind-Value="Content.Instance.Notes"
-                                Label="Notes"
-                                Rows="4"
-                                Style="width: 100%;" />
-                
-                @if (Content.AvailableParentInstances != null && Content.AvailableParentInstances.Any())
-                {
-                    <FluentSelect Value="@(Content.Instance.ParentProjectId.ToString())"
-                                  ValueChanged="@((val) => Content.Instance.ParentProjectId = String.IsNullOrWhiteSpace(val) ? null : Guid.Parse(val))"
-                                  Label="Parent Project (Optional)"
-                                  Items="ParentSelectItems"
-                                  OptionValue="@(opt => opt.Value.ToString())"
-                                  Style="width: 100%;">
-                        <OptionTemplate Context="optionTemplateContext">
-                            @optionTemplateContext.Text
-                        </OptionTemplate>
-                    </FluentSelect>
-                }
-                
-                @if (!string.IsNullOrEmpty(ErrorMessage))
-                {
-                    <FluentMessageBar Intent="MessageIntent.Error">
-                        @ErrorMessage
-                    </FluentMessageBar>
-                }
-                
-            </FluentStack>
-        </EditForm>
-    </FluentDialogBody>
-    
+            <FluentTextField @bind-Value="Content.Instance.Name"
+                             Label="Name"
+                             Required
+                             Style="width: 100%;" />
+            
+            <FluentTextArea @bind-Value="Content.Instance.Description"
+                            Label="Description"
+                            Rows="3"
+                            Style="width: 100%;" />
+            
+            <FluentTextField @bind-Value="Content.Instance.MainHost"
+                             Label="Main Host"
+                             Placeholder="e.g., localhost:5000"
+                             Style="width: 100%;" />
+            
+            <FluentTextArea @bind-Value="Content.Instance.Notes"
+                            Label="Notes"
+                            Rows="4"
+                            Style="width: 100%;" />
+            
+            @if (Content.AvailableParentInstances.Any())
+            {
+                <FluentSelect Value="@(Content.Instance.ParentProjectId.ToString())"
+                              ValueChanged="@((val) => Content.Instance.ParentProjectId = String.IsNullOrWhiteSpace(val) ? null : Guid.Parse(val))"
+                              Label="Parent Project (Optional)"
+                              Items="ParentSelectItems"
+                              OptionValue="@(opt => opt.Value.ToString())"
+                              Style="width: 100%;">
+                    <OptionTemplate Context="optionTemplateContext">
+                        @optionTemplateContext.Text
+                    </OptionTemplate>
+                </FluentSelect>
+            }
+            
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <FluentMessageBar Intent="MessageIntent.Error">
+                    @ErrorMessage
+                </FluentMessageBar>
+            }
+            
+        </FluentStack>
+    </EditForm>
+</FluentDialogBody>
+
     <FluentDialogFooter>
         <FluentButton Appearance="Appearance.Accent" 
-                      OnClick="HandleSubmitAsync"
+                      IconStart="@(Content.IsEditMode ? new Icons.Regular.Size20.Save() : new Icons.Regular.Size20.Add())"
+                      OnClick="@(() => HandleSubmitAsync(closeAfterSave: false))" 
                       Loading="IsSaving">
             @(Content.IsEditMode ? "Update" : "Create")
         </FluentButton>
+        
         <FluentButton Appearance="Appearance.Neutral" 
+                      IconStart="@(Content.IsEditMode ? new Icons.Regular.Size20.CheckmarkCircle() : new Icons.Regular.Size20.AddCircle())"
+                      OnClick="@(() => HandleSubmitAsync(closeAfterSave: true))" 
+                      Loading="IsSaving">
+            @(Content.IsEditMode ? "Update" : "Create") and Close
+        </FluentButton>
+        
+        <FluentButton Appearance="Appearance.Neutral" 
+                      IconStart="@(new Icons.Regular.Size20.Dismiss())"
                       OnClick="HandleCancelAsync">
             Cancel
         </FluentButton>
-        
-        @if (Content.IsEditMode)
-        {
-            <FluentSpacer />
-            <FluentButton Appearance="Appearance.Accent" 
-                          BackgroundColor="var(--error)"
-                          IconStart="@(new Icons.Regular.Size20.Delete())"
-                          OnClick="HandleDeleteClickAsync"
-                          Loading="IsDeleting">
-                Delete
-            </FluentButton>
-        }
-    </FluentDialogFooter>
-}
+    
+    @if (Content.IsEditMode)
+    {
+        <FluentSpacer />
+        <FluentButton Appearance="Appearance.Accent" 
+                      BackgroundColor="var(--error)"
+                      IconStart="@(new Icons.Regular.Size20.Delete())"
+                      OnClick="HandleDeleteClickAsync"
+                      Disabled="IsSaving"
+                      Loading="IsDeleting">
+            Delete
+        </FluentButton>
+    }
+</FluentDialogFooter>

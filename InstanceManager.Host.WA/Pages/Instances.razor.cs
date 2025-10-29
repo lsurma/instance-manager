@@ -1,20 +1,39 @@
 using InstanceManager.Application.Contracts.ProjectInstance;
 using InstanceManager.Host.WA.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.FluentUI.AspNetCore.Components;
 
 namespace InstanceManager.Host.WA.Pages;
 
-public partial class Instances : ComponentBase
+public partial class Instances : ComponentBase, IDisposable
 {
     [Inject] 
     private IDialogService DialogService { get; set; } = default!;
+    
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
     
     private List<ITreeViewItem> Items { get; set; } = new();
     private ITreeViewItem? SelectedItem { get; set; }
     private List<ProjectInstanceDto> AllInstances { get; set; } = new();
     private IDialogReference? _currentDialog;
+    private string _refreshToken = Guid.NewGuid().ToString();
+    private bool _isProcessingNavigation = false;
 
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ProcessUrlParametersAsync();
+        }
+    }
+    
     private void HandleDataFetched(List<ProjectInstanceDto> instances)
     {
         AllInstances = instances;
@@ -88,13 +107,52 @@ public partial class Instances : ComponentBase
 
         if (item != null && Guid.TryParse(item.Id, out var instanceId))
         {
-            // Find the instance from the all instances list
-            var instance = AllInstances.FirstOrDefault(i => i.Id == instanceId);
+            // Update URL with instance ID
+            NavigationManager.NavigateTo($"/instances?id={instanceId}", false);
+        }
+    }
+    
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        await ProcessUrlParametersAsync();
+    }
+    
+    private async Task ProcessUrlParametersAsync()
+    {
+        if (_isProcessingNavigation) 
+            return;
+        
+        _isProcessingNavigation = true;
+        
+        try
+        {
+            var uri = new Uri(NavigationManager.Uri);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            var action = query["action"];
+            var idParam = query["id"];
             
-            if (instance != null)
+            if (action == "create")
             {
-                await OpenInstancePanelAsync(instance);
+                await OpenInstancePanelAsync(null);
             }
+            else if (!string.IsNullOrEmpty(idParam) && Guid.TryParse(idParam, out var instanceId))
+            {
+                var instance = AllInstances.FirstOrDefault(i => i.Id == instanceId);
+                if (instance != null)
+                {
+                    await OpenInstancePanelAsync(instance);
+                }
+            }
+            else if (_currentDialog != null)
+            {
+                // No query params, close any open dialog
+                await _currentDialog.CloseAsync();
+                _currentDialog = null;
+            }
+        }
+        finally
+        {
+            _isProcessingNavigation = false;
         }
     }
     
@@ -117,10 +175,19 @@ public partial class Instances : ComponentBase
                     Id = Guid.NewGuid(),
                     CreatedAt = DateTimeOffset.UtcNow
                 },
+            
             IsEditMode = isEditMode,
+            
             AvailableParentInstances = isEditMode 
                 ? AllInstances.Where(i => i.Id != instance!.Id).ToList()
-                : AllInstances
+                : AllInstances,
+            
+            OnDataChanged = async () =>
+            {
+                _refreshToken = Guid.NewGuid().ToString();
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
         };
 
         var newDialog = await DialogService.ShowPanelAsync<InstancePanel>(parameters, new DialogParameters
@@ -143,10 +210,18 @@ public partial class Instances : ComponentBase
         var result = await _currentDialog.Result;
         _currentDialog = null;
         
+        // Clear URL parameters when dialog closes
+        // NavigationManager.NavigateTo("/instances", false);
+        
         if (!result.Cancelled)
         {
             // Refresh the data after saving
             StateHasChanged();
         }
+    }
+    
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 }

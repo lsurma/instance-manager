@@ -25,7 +25,6 @@ public partial class InstancePanel : IDialogContentComponent<InstancePanelParame
     private bool IsSaving { get; set; }
     private bool IsDeleting { get; set; }
     private string? ErrorMessage { get; set; }
-    private string? SelectedParentId { get; set; }
     
     private List<Option<Guid?>> ParentSelectItems
     {
@@ -51,7 +50,7 @@ public partial class InstancePanel : IDialogContentComponent<InstancePanelParame
         }
     }
     
-    private async Task HandleSubmitAsync()
+    private async Task HandleSubmitAsync(bool closeAfterSave = true)
     {
         if (Content?.Instance == null) return;
         
@@ -68,14 +67,23 @@ public partial class InstancePanel : IDialogContentComponent<InstancePanelParame
                 Description = Content.Instance.Description,
                 MainHost = Content.Instance.MainHost,
                 Notes = Content.Instance.Notes,
-                ParentProjectId = string.IsNullOrEmpty(SelectedParentId) ? null : Guid.Parse(SelectedParentId)
+                ParentProjectId = Content.Instance.ParentProjectId
             });
             
             // Show success toast
             ToastService.ShowSuccess($"Instance '{Content.Instance.Name}' {(Content.IsEditMode ? "updated" : "created")} successfully");
             
-            // Close dialog with success result
-            await Dialog!.CloseAsync(Content.Instance);
+            // Notify parent component that data changed
+            if (Content.OnDataChanged != null)
+            {
+                await Content.OnDataChanged.Invoke();
+            }
+            
+            // Close dialog with success result if requested
+            if (closeAfterSave)
+            {
+                await Dialog!.CloseAsync(Content.Instance);
+            }
         }
         catch (Exception ex)
         {
@@ -120,6 +128,12 @@ public partial class InstancePanel : IDialogContentComponent<InstancePanelParame
             // Show success toast
             ToastService.ShowSuccess($"Instance '{Content.Instance.Name}' deleted successfully");
             
+            // Notify parent component that data changed
+            if (Content.OnDataChanged != null)
+            {
+                await Content.OnDataChanged.Invoke();
+            }
+            
             // Close dialog with the deleted instance to signal deletion
             await Dialog!.CloseAsync(Content.Instance);
         }
@@ -139,4 +153,5 @@ public class InstancePanelParameters
     public ProjectInstanceDto Instance { get; set; } = default!;
     public bool IsEditMode { get; set; }
     public List<ProjectInstanceDto> AvailableParentInstances { get; set; } = new();
+    public Func<Task>? OnDataChanged { get; set; }
 }
