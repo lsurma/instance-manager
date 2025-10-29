@@ -18,6 +18,17 @@ public class CustomDialogProvider : FluentDialogProvider, IDisposable
         // Store initial path (without query string)
         _previousPath = GetPathFromUri(NavigationManager.Uri);
         
+        // Get OnLocationChanged method from base class using reflection
+        var baseType = typeof(FluentDialogProvider);
+        var locationChangedMethod = baseType.GetMethod("LocationChanged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        
+        // Remove original subscription to avoid double handling
+        if (locationChangedMethod != null)
+        {
+            var x = (EventHandler<LocationChangedEventArgs>)Delegate.CreateDelegate(typeof(EventHandler<LocationChangedEventArgs>), this, locationChangedMethod);
+            NavigationManager.LocationChanged -= x;
+        }
+        
         // Subscribe to location changes
         NavigationManager.LocationChanged += OnLocationChanged;
     }
