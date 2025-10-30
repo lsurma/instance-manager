@@ -3,7 +3,7 @@ using InstanceManager.Application.Contracts.ProjectInstance;
 using Microsoft.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components;
 
-namespace InstanceManager.Host.WA.Components;
+namespace InstanceManager.Host.WA.Modules.Instances;
 
 public partial class InstancePanel : IDialogContentComponent<InstancePanelParameters>
 {

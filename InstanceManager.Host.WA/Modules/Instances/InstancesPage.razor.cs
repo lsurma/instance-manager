@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.FluentUI.AspNetCore.Components;
 
-namespace InstanceManager.Host.WA.Pages;
+namespace InstanceManager.Host.WA.Modules.Instances;
 
-public partial class Instances : ComponentBase, IDisposable
+public partial class InstancesPage : ComponentBase, IDisposable
 {
     [Inject] 
     private IDialogService DialogService { get; set; } = default!;
@@ -23,7 +23,6 @@ public partial class Instances : ComponentBase, IDisposable
     private List<ProjectInstanceDto> AllInstances { get; set; } = new();
     private IDialogReference? _currentDialog;
     private string _refreshToken = Guid.NewGuid().ToString();
-    private bool _isProcessingNavigation = false;
 
     protected override void OnInitialized()
     {
@@ -108,11 +107,17 @@ public partial class Instances : ComponentBase, IDisposable
     private async void SelectedItemChanged(ITreeViewItem? item)
     {
         SelectedItem = item;
-
+        var idInUrl = NavHelper.GetQueryParameter("id");
+        
         if (item != null && Guid.TryParse(item.Id, out var instanceId))
         {
             // Update URL with instance ID
             NavigationManager.NavigateTo($"/instances?id={instanceId}", false);
+        }
+        else if (Guid.TryParse(idInUrl, out _))
+        {
+            // Clear URL parameters
+            NavigationManager.NavigateTo("/instances", false);
         }
     }
     
@@ -123,11 +128,6 @@ public partial class Instances : ComponentBase, IDisposable
     
     private async Task ProcessUrlParametersAsync()
     {
-        if (_isProcessingNavigation) 
-            return;
-        
-        _isProcessingNavigation = true;
-        
         try
         {
             var uri = new Uri(NavigationManager.Uri);
@@ -154,9 +154,9 @@ public partial class Instances : ComponentBase, IDisposable
                 _currentDialog = null;
             }
         }
-        finally
+        catch
         {
-            _isProcessingNavigation = false;
+            
         }
     }
     

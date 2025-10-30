@@ -8,27 +8,32 @@ public class CustomDialogProvider : FluentDialogProvider, IDisposable
 {
     [Inject]
     private NavigationManager NavigationManager { get; set; } = default!;
-    
+
     private string? _previousPath;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        
+
         // Store initial path (without query string)
         _previousPath = GetPathFromUri(NavigationManager.Uri);
-        
+
         // Get OnLocationChanged method from base class using reflection
         var baseType = typeof(FluentDialogProvider);
         var locationChangedMethod = baseType.GetMethod("LocationChanged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
+
         // Remove original subscription to avoid double handling
         if (locationChangedMethod != null)
         {
-            var x = (EventHandler<LocationChangedEventArgs>)Delegate.CreateDelegate(typeof(EventHandler<LocationChangedEventArgs>), this, locationChangedMethod);
-            NavigationManager.LocationChanged -= x;
+            var originalLocationChanged = (EventHandler<LocationChangedEventArgs>)Delegate.CreateDelegate(
+                typeof(EventHandler<LocationChangedEventArgs>),
+                this,
+                locationChangedMethod
+            );
+            
+            NavigationManager.LocationChanged -= originalLocationChanged;
         }
-        
+
         // Subscribe to location changes
         NavigationManager.LocationChanged += OnLocationChanged;
     }
@@ -36,16 +41,14 @@ public class CustomDialogProvider : FluentDialogProvider, IDisposable
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         var currentPath = GetPathFromUri(e.Location);
-        
+
         // Only close dialogs if the path changed (not just query string)
         if (currentPath != _previousPath)
         {
             _previousPath = currentPath;
-            // The base class will handle closing dialogs on StateHasChanged
+            DismissAll();
             StateHasChanged();
         }
-        
-        // If only query string changed, do nothing (dialogs stay open)
     }
 
     private string GetPathFromUri(string uri)

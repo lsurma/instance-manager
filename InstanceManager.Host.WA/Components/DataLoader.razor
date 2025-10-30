@@ -1,35 +1,77 @@
 @typeparam TResponse
+@typeparam TQuery
 @inject IRequestSender RequestSender
 @inject ILocalStorageService LocalStorage
 
 @if (IsLoading && Data == null)
 {
-    @LoadingContent
+    @if (LoadingContent != null)
+    {
+        @LoadingContent
+    }
+    else
+    {
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 24px;">
+            <FluentProgressRing />
+            <p>Loading data...</p>
+        </div>
+    }
 }
 else if (!string.IsNullOrEmpty(ErrorMessage))
 {
-    @ErrorContent(ErrorMessage)
+    @if (ErrorContent != null)
+    {
+        @ErrorContent(ErrorMessage)
+    }
+    else
+    {
+        <FluentMessageBar Intent="MessageIntent.Error">
+            @ErrorMessage
+        </FluentMessageBar>
+    }
 }
 else if (Data != null)
 {
-    @ChildContent(Data)
+    @if (IsEmpty(Data))
+    {
+        @if (NoDataContent != null)
+        {
+            @NoDataContent
+        }
+        else
+        {
+            <FluentMessageBar Intent="MessageIntent.Info">
+                No data available.
+            </FluentMessageBar>
+        }
+    }
+    else
+    {
+        @ChildContent(Data)
+    }
 }
 
 @code {
     [Parameter]
-    public required object Query { get; set; }
+    public required TQuery Query { get; set; }
 
     [Parameter]
     public string? CacheKey { get; set; }
     
     [Parameter]
     public string? RefreshToken { get; set; }
-
+    
+    [Parameter]
+    public Func<TQuery, Task<bool>>? ShouldCache { get; set; }
+    
     [Parameter]
     public RenderFragment? LoadingContent { get; set; }
 
     [Parameter]
     public RenderFragment<string>? ErrorContent { get; set; }
+    
+    [Parameter]
+    public RenderFragment? NoDataContent { get; set; }
 
     [Parameter]
     public required RenderFragment<TResponse> ChildContent { get; set; }
@@ -65,29 +107,36 @@ else if (Data != null)
             IsLoading = true;
             ErrorMessage = null;
 
-            var cacheKey = CacheKey ?? $"query_{Query.GetType().Name}";
+            var cacheKey = CacheKey ?? $"query_{Query!.GetType().Name}";
+            var shouldUseCache = ShouldCache == null || await ShouldCache(Query);
 
-            // Try to load from cache first
-            var cachedData = await LocalStorage.GetItemAsync<TResponse>(cacheKey);
-            if (cachedData != null)
+            // Try to load from cache first if caching is enabled
+            if (shouldUseCache)
             {
-                Data = cachedData;
-                IsLoading = false;
-
-                // Notify that cached data is available
-                if (OnDataFetched.HasDelegate)
+                var cachedData = await LocalStorage.GetItemAsync<TResponse>(cacheKey);
+                if (cachedData != null)
                 {
-                    await OnDataFetched.InvokeAsync(cachedData);
-                }
+                    Data = cachedData;
+                    IsLoading = false;
 
-                StateHasChanged();
+                    // Notify that cached data is available
+                    if (OnDataFetched.HasDelegate)
+                    {
+                        await OnDataFetched.InvokeAsync(cachedData);
+                    }
+
+                    StateHasChanged();
+                }
             }
 
             // Fetch fresh data from API
             var freshData = await RequestSender.SendAsync<TResponse>(Query);
 
-            // Update cache
-            await LocalStorage.SetItemAsync(cacheKey, freshData);
+            // Update cache if caching is enabled
+            if (shouldUseCache)
+            {
+                await LocalStorage.SetItemAsync(cacheKey, freshData);
+            }
 
             // Update UI with fresh data
             Data = freshData;
@@ -112,5 +161,18 @@ else if (Data != null)
     public async Task RefreshAsync()
     {
         await LoadDataAsync();
+    }
+    
+    private bool IsEmpty(TResponse data)
+    {
+        if (data == null) return true;
+        
+        // Check if it's a collection
+        if (data is System.Collections.IEnumerable enumerable)
+        {
+            return !enumerable.Cast<object>().Any();
+        }
+        
+        return false;
     }
 }

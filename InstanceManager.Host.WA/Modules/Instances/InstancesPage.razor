@@ -1,0 +1,25 @@
+﻿@page "/instances"
+@using InstanceManager.Application.Contracts.ProjectInstance
+
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+    <h3 style="margin: 0;">Project Instances</h3>
+        
+    
+    <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
+        <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Add())" />
+    </FluentNavLink>
+</FluentStack>
+    
+
+<FluentDivider Style="margin: 16px 0;" />
+
+<DataLoader TResponse="List<ProjectInstanceDto>"
+            TQuery="GetAllProjectInstancesQuery"
+            Query="new GetAllProjectInstancesQuery()"
+            CacheKey="all_project_instances"
+            RefreshToken="@_refreshToken"
+            OnDataFetched="HandleDataFetched">
+    <ChildContent Context="instances">
+        <FluentTreeView Items="Items" SelectedItemChanged="SelectedItemChanged" SelectedItem="SelectedItem" />
+    </ChildContent>
+</DataLoader>
