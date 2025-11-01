@@ -1,5 +1,8 @@
-﻿@page "/instances"
+@page "/instances"
 @using InstanceManager.Application.Contracts.ProjectInstance
+@using Radzen
+@using Radzen.Blazor
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
 
 <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
     <h3 style="margin: 0;">Project Instances</h3>
@@ -20,6 +23,10 @@
                   OnClick="@(() => _renderMode = RenderMode.WebAwesomeTree)">
         WebAwesome - Tree
     </FluentButton>
+    <FluentButton Appearance="@(_renderMode == RenderMode.DataGrid ? Appearance.Accent : Appearance.Neutral)"
+                  OnClick="@(() => _renderMode = RenderMode.DataGrid)">
+        Data Grid
+    </FluentButton>
 </FluentStack>
 
 <FluentDivider Style="margin: 16px 0;" />
@@ -39,6 +46,38 @@
             <InstancesWebAwesomeTree AllInstances="AllInstances" 
                                      SelectedInstanceId="GetSelectedInstanceId()" 
                                      OnInstanceSelected="HandleWebAwesomeItemSelected" />
+        </div>
+        
+        <div style="display: @(_renderMode == RenderMode.DataGrid ? "block" : "none")">
+            <RadzenDataGrid Data="@AllInstances" 
+                            TItem="ProjectInstanceDto" 
+                            AllowFiltering="true" 
+                            AllowSorting="true" 
+                            AllowPaging="true" 
+                            PageSize="20"
+                            FilterPopupRenderMode="PopupRenderMode.OnDemand"
+                            SelectionMode="DataGridSelectionMode.Single"
+                            ValueChanged="@OnDataGridSelectionChanged"
+                            >
+                <Columns>
+                    <RadzenDataGridColumn TItem="ProjectInstanceDto" Property="Name" Title="Name" />
+                    <RadzenDataGridColumn TItem="ProjectInstanceDto" Property="Description" Title="Description" />
+                    <RadzenDataGridColumn TItem="ProjectInstanceDto" Property="CreatedAt" Title="Created At" FormatString="{0:yyyy-MM-dd HH:mm}" />
+                    <RadzenDataGridColumn TItem="ProjectInstanceDto" Property="ParentProjectId" Title="Parent">
+                        <Template Context="instance">
+                            @if (instance.ParentProjectId.HasValue)
+                            {
+                                var parent = AllInstances.FirstOrDefault(i => i.Id == instance.ParentProjectId.Value);
+                                @(parent?.Name ?? "Unknown")
+                            }
+                            else
+                            {
+                                <text>-</text>
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
         </div>
     </ChildContent>
 </DataLoader>

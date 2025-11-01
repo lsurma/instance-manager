@@ -5,6 +5,7 @@ using InstanceManager.Host.WA.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.FluentUI.AspNetCore.Components;
+using Radzen;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -19,5 +20,6 @@ builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<NavigationHelper>();
 
 builder.Services.AddFluentUIComponents();
+builder.Services.AddRadzenComponents();
 
 await builder.Build().RunAsync();

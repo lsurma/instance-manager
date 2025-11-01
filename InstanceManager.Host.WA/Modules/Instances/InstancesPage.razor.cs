@@ -24,6 +24,7 @@ public partial class InstancesPage : ComponentBase, IDisposable
     private IDialogReference? _currentDialog;
     private string _refreshToken = Guid.NewGuid().ToString();
     private RenderMode _renderMode = RenderMode.WebAwesomeTree;
+    private IList<ProjectInstanceDto> _selectedRows = new List<ProjectInstanceDto>();
 
     protected override void OnInitialized()
     {
@@ -133,6 +134,26 @@ public partial class InstancesPage : ComponentBase, IDisposable
         _selectedInstanceId = instanceId;
         // Update URL with instance ID
         NavigationManager.NavigateTo($"/instances?id={instanceId}", false);
+    }
+    
+    private Task OnDataGridSelectionChanged(IList<ProjectInstanceDto> selectedRows)
+    {
+        if (_renderMode != RenderMode.DataGrid)
+        {
+            return Task.CompletedTask;
+        }
+        
+        _selectedRows = selectedRows;
+        
+        if (selectedRows != null && selectedRows.Count > 0)
+        {
+            var instance = selectedRows[0];
+            _selectedInstanceId = instance.Id;
+
+            NavigationManager.NavigateTo($"/instances?id={instance.Id}", false);
+        }
+        
+        return Task.CompletedTask;
     }
     
     private Guid? _selectedInstanceId;
@@ -277,5 +298,6 @@ public partial class InstancesPage : ComponentBase, IDisposable
 public enum RenderMode
 {
     FluentTree,
-    WebAwesomeTree
+    WebAwesomeTree,
+    DataGrid
 }
