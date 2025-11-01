@@ -23,7 +23,7 @@ public partial class InstancesPage : ComponentBase, IDisposable
     private List<ProjectInstanceDto> AllInstances { get; set; } = new();
     private IDialogReference? _currentDialog;
     private string _refreshToken = Guid.NewGuid().ToString();
-    private RenderMode _renderMode = RenderMode.FluentTree;
+    private RenderMode _renderMode = RenderMode.WebAwesomeTree;
 
     protected override void OnInitialized()
     {
@@ -108,6 +108,12 @@ public partial class InstancesPage : ComponentBase, IDisposable
 
     private async void SelectedItemChanged(ITreeViewItem? item)
     {
+        // Only process if FluentTree is active
+        if (_renderMode != RenderMode.FluentTree)
+        {
+            return;
+        }
+        
         var idInUrl = NavHelper.GetQueryParameter("id");
         
         if (item != null && Guid.TryParse(item.Id, out var instanceId))
@@ -124,12 +130,20 @@ public partial class InstancesPage : ComponentBase, IDisposable
     
     private void HandleWebAwesomeItemSelected(Guid instanceId)
     {
+        _selectedInstanceId = instanceId;
         // Update URL with instance ID
         NavigationManager.NavigateTo($"/instances?id={instanceId}", false);
     }
     
+    private Guid? _selectedInstanceId;
+    
     private Guid? GetSelectedInstanceId()
     {
+        if (_selectedInstanceId.HasValue)
+        {
+            return _selectedInstanceId;
+        }
+        
         if (SelectedItem != null && Guid.TryParse(SelectedItem.Id, out var instanceId))
         {
             return instanceId;
@@ -154,10 +168,12 @@ public partial class InstancesPage : ComponentBase, IDisposable
             if (action == "create")
             {
                 SelectedItem = null;
+                _selectedInstanceId = null;
                 await OpenInstancePanelAsync(null);
             }
             else if (!string.IsNullOrEmpty(idParam) && Guid.TryParse(idParam, out var instanceId))
             {
+                _selectedInstanceId = instanceId;
                 var instance = AllInstances.FirstOrDefault(i => i.Id == instanceId);
 
                 if (instance != null)
@@ -169,6 +185,7 @@ public partial class InstancesPage : ComponentBase, IDisposable
             else
             {
                 SelectedItem = null;
+                _selectedInstanceId = null;
                 
                  if (_currentDialog != null)
                  {

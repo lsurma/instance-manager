@@ -17,4 +17,28 @@ export function afterStarted(blazor) {
             };
         }
     });
+    
+    blazor.registerCustomEventType('WaExpand', {
+        browserEventName: 'wa-expand',
+        createEventArgs: event => {
+            const target = event.target;
+            let itemId = target.getAttribute('data-id');
+            
+            return {
+                itemId: itemId
+            };
+        }
+    });
+    
+    blazor.registerCustomEventType('WaCollapse', {
+        browserEventName: 'wa-collapse',
+        createEventArgs: event => {
+            const target = event.target;
+            let itemId = target.getAttribute('data-id');
+            
+            return {
+                itemId: itemId
+            };
+        }
+    });
 }

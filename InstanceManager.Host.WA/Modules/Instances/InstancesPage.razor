@@ -31,16 +31,15 @@
             RefreshToken="@_refreshToken"
             OnDataFetched="HandleDataFetched">
     <ChildContent Context="instances">
-        @if (_renderMode == RenderMode.FluentTree)
-        {
+        <div style="display: @(_renderMode == RenderMode.FluentTree ? "block" : "none")">
             <FluentTreeView Items="Items" SelectedItemChanged="SelectedItemChanged" SelectedItem="SelectedItem" />
-        }
-        else if (_renderMode == RenderMode.WebAwesomeTree)
-        {
+        </div>
+        
+        <div style="display: @(_renderMode == RenderMode.WebAwesomeTree ? "block" : "none")">
             <InstancesWebAwesomeTree AllInstances="AllInstances" 
                                      SelectedInstanceId="GetSelectedInstanceId()" 
                                      OnInstanceSelected="HandleWebAwesomeItemSelected" />
-        }
+        </div>
     </ChildContent>
 </DataLoader>
 

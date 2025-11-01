@@ -1,12 +1,18 @@
 @using InstanceManager.Application.Contracts.ProjectInstance
 @using InstanceManager.Host.WA.CustomEvents
 
-<wa-tree selection="single" class="tree-selectable tree-with-lines" @onWaSelectionChange="HandleSelectionChange">
+<wa-tree selection="single" class="tree-selectable tree-with-lines" @onWaSelectionChange="HandleSelectionChange" @onWaExpand="HandleExpand" @onWaCollapse="HandleCollapse">
     @foreach (var instance in RootInstances)
     {
         @RenderTreeItem(instance)
     }
 </wa-tree>
+
+<style>
+  .tree-with-lines {
+    --indent-guide-width: 1px;
+  }
+</style>
 
 @code {
     [Parameter]
@@ -18,23 +24,49 @@
     [Parameter]
     public EventCallback<Guid> OnInstanceSelected { get; set; }
     
+    private HashSet<Guid> _manuallyExpandedItems = new();
+    
     private List<ProjectInstanceDto> RootInstances => 
         AllInstances.Where(i => i.ParentProjectId == null).ToList();
+    
+    private bool HasSelectedDescendant(ProjectInstanceDto instance)
+    {
+        if (!SelectedInstanceId.HasValue) return false;
+        
+        var descendants = GetAllDescendants(instance.Id);
+        return descendants.Any(d => d.Id == SelectedInstanceId.Value);
+    }
+    
+    private List<ProjectInstanceDto> GetAllDescendants(Guid parentId)
+    {
+        var result = new List<ProjectInstanceDto>();
+        var directChildren = AllInstances.Where(i => i.ParentProjectId == parentId).ToList();
+        
+        foreach (var child in directChildren)
+        {
+            result.Add(child);
+            result.AddRange(GetAllDescendants(child.Id));
+        }
+        
+        return result;
+    }
     
     private RenderFragment RenderTreeItem(ProjectInstanceDto instance) => __builder =>
     {
         var children = AllInstances.Where(i => i.ParentProjectId == instance.Id).ToList();
+        var shouldExpand = HasSelectedDescendant(instance) || _manuallyExpandedItems.Contains(instance.Id);
         
         <wa-tree-item @key="instance.Id" 
                       data-id="@instance.Id"
-                      selected="@(instance.Id == SelectedInstanceId)">
+                      selected="@(instance.Id == SelectedInstanceId)"
+                      expanded="@shouldExpand">
             @instance.Name
             
             @if (children.Any())
             {
                 @foreach (var child in children)
                 {
-                    @RenderTreeItem(child)
+                    @RenderTreeItem(child);
                 }
             }
         </wa-tree-item>
@@ -48,6 +80,22 @@
             {
                 await OnInstanceSelected.InvokeAsync(guid);
             }
+        }
+    }
+    
+    private void HandleExpand(WebAwesomeExpandEventArgs args)
+    {
+        if (!string.IsNullOrEmpty(args.ItemId) && Guid.TryParse(args.ItemId, out var guid))
+        {
+            _manuallyExpandedItems.Add(guid);
+        }
+    }
+    
+    private void HandleCollapse(WebAwesomeCollapseEventArgs args)
+    {
+        if (!string.IsNullOrEmpty(args.ItemId) && Guid.TryParse(args.ItemId, out var guid))
+        {
+            _manuallyExpandedItems.Remove(guid);
         }
     }
 }
