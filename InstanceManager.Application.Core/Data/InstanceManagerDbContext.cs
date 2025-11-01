@@ -10,6 +10,8 @@ public class InstanceManagerDbContext : DbContext
 
     public DbSet<ProjectInstance.ProjectInstance> ProjectInstances { get; set; }
 
+    public DbSet<DataSet.DataSet> DataSets { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

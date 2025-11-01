@@ -1,0 +1,90 @@
+@using InstanceManager.Application.Contracts.DataSet
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@implements IDialogContentComponent<DataSetPanelParameters>
+
+<FluentKeyCode Only="@([KeyCode.Ctrl, KeyCode.KeyS])" OnKeyDown="@HandleKeyDownAsync">
+<FluentDialogBody>
+    <EditForm Model="Content.DataSet" OnSubmit="@(() => HandleSubmitAsync(false))">
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+            
+            <FluentTextField @bind-Value="Content.DataSet.Name"
+                             Label="Name"
+                             Immediate="true"
+                             Required
+                             Style="width: 100%;" />
+            
+            <FluentTextArea @bind-Value="Content.DataSet.Description"
+                            Label="Description"
+                            Immediate="true"
+                            Rows="3"
+                            Style="width: 100%;" />
+            
+            <FluentTextArea @bind-Value="Content.DataSet.Notes"
+                            Label="Notes"
+                            Immediate="true"
+                            Rows="4"
+                            Style="width: 100%;" />
+            
+            @if (Content.AvailableDataSets.Any())
+            {
+                <div>
+                    <label style="font-weight: 500; margin-bottom: 8px; display: block;">Included Data Sets (Optional)</label>
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                        @foreach (var availableDataSet in Content.AvailableDataSets)
+                        {
+                            var isSelected = SelectedIncludeIds.Contains(availableDataSet.Id);
+                            <FluentCheckbox 
+                                Label="@availableDataSet.Name"
+                                Value="@isSelected"
+                                ValueChanged="@((bool newValue) => HandleIncludeChanged(availableDataSet.Id, newValue))" />
+                        }
+                    </FluentStack>
+                </div>
+            }
+            
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <FluentMessageBar Intent="MessageIntent.Error">
+                    @ErrorMessage
+                </FluentMessageBar>
+            }
+            
+        </FluentStack>
+    </EditForm>
+</FluentDialogBody>
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Accent" 
+                      IconStart="@(Content.IsEditMode ? new Icons.Regular.Size20.Save() : new Icons.Regular.Size20.Add())"
+                      OnClick="@(() => HandleSubmitAsync(closeAfterSave: false))" 
+                      Loading="IsSaving">
+            @(Content.IsEditMode ? "Update" : "Create")
+        </FluentButton>
+        
+        <FluentButton Appearance="Appearance.Neutral" 
+                      IconStart="@(Content.IsEditMode ? new Icons.Regular.Size20.CheckmarkCircle() : new Icons.Regular.Size20.AddCircle())"
+                      OnClick="@(() => HandleSubmitAsync(closeAfterSave: true))" 
+                      Loading="IsSaving">
+            @(Content.IsEditMode ? "Update" : "Create") and Close
+        </FluentButton>
+        
+        <FluentButton Appearance="Appearance.Neutral" 
+                      IconStart="@(new Icons.Regular.Size20.Dismiss())"
+                      OnClick="HandleCancelAsync">
+            Cancel
+        </FluentButton>
+    
+    @if (Content.IsEditMode)
+    {
+        <FluentSpacer />
+        <FluentButton Appearance="Appearance.Accent" 
+                      BackgroundColor="var(--error)"
+                      IconStart="@(new Icons.Regular.Size20.Delete())"
+                      OnClick="HandleDeleteClickAsync"
+                      Disabled="IsSaving"
+                      Loading="IsDeleting">
+            Delete
+        </FluentButton>
+    }
+</FluentDialogFooter>
+</FluentKeyCode>

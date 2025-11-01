@@ -1,0 +1,72 @@
+@page "/datasets"
+@using InstanceManager.Application.Contracts.Common
+@using InstanceManager.Application.Contracts.DataSet
+@using Radzen
+@using Radzen.Blazor
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+    <h3 style="margin: 0;">Data Sets</h3>
+    
+    <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
+        <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Add())" />
+    </FluentNavLink>
+</FluentStack>
+
+<FluentDivider Style="margin: 16px 0;" />
+
+<DataLoader TResponse="PaginatedList<DataSetDto>"
+            TQuery="GetDataSetsQuery"
+            Query="@_currentQuery"
+            CacheKey="@_cacheKey"
+            RefreshToken="@_refreshToken"
+            OnDataFetched="HandleDataFetched">
+    <ChildContent Context="result">
+        <FluentStack Orientation="Orientation.Horizontal" Style="margin-bottom: 16px;" VerticalAlignment="VerticalAlignment.Center">
+            <FluentSearch Placeholder="Search datasets..."
+                         @bind-Value="@_searchTerm"
+                         @bind-Value:after="OnSearchChanged"
+                         Style="width: 300px;" />
+            @if (!string.IsNullOrWhiteSpace(_searchTerm))
+            {
+                <FluentButton Appearance="Appearance.Lightweight"
+                              IconStart="@(new Icons.Regular.Size20.Dismiss())"
+                              OnClick="ClearSearch">
+                    Clear
+                </FluentButton>
+            }
+        </FluentStack>
+        
+        <RadzenDataGrid Data="@AllDataSets"
+                        LoadData="@OnLoadData"
+                        Count="@_totalItems"
+                        TItem="DataSetDto" 
+                        AllowFiltering="true" 
+                        AllowSorting="true" 
+                        AllowPaging="true" 
+                        PageSize="@_pageSize"
+                        FilterPopupRenderMode="PopupRenderMode.OnDemand"
+                        SelectionMode="DataGridSelectionMode.Single"
+                        Value="@_selectedRows"
+                        ValueChanged="@OnDataGridSelectionChanged">
+            <Columns>
+                <RadzenDataGridColumn TItem="DataSetDto" Property="Name" Title="Name" />
+                <RadzenDataGridColumn TItem="DataSetDto" Property="Description" Title="Description" />
+                <RadzenDataGridColumn TItem="DataSetDto" Property="CreatedAt" Title="Created At" FormatString="{0:yyyy-MM-dd HH:mm}" />
+                <RadzenDataGridColumn TItem="DataSetDto" Property="IncludedDataSetIds" Title="Includes">
+                    <Template Context="dataSet">
+                        @if (dataSet.IncludedDataSetIds.Any())
+                        {
+                            <text>@dataSet.IncludedDataSetIds.Count dataset(s)</text>
+                        }
+                        else
+                        {
+                            <text>-</text>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </ChildContent>
+</DataLoader>
+
