@@ -55,6 +55,12 @@ public partial class InstancesPage : ComponentBase, IDisposable
         // Update the tree in-place to preserve object references
         UpdateTreeItems(Items, rootInstances, eventArgs.Data.Items);
         
+        // Restore DataGrid selection if in DataGrid mode
+        if (_renderMode == RenderMode.DataGrid && _selectedInstanceId.HasValue)
+        {
+            RestoreDataGridSelection();
+        }
+        
         // Process URL parameters on first live data fetch (e.g., direct link with ?id=xxx)
         if (eventArgs.IsFirstFetch && !eventArgs.IsFromCache)
         {
@@ -193,8 +199,35 @@ public partial class InstancesPage : ComponentBase, IDisposable
 
             NavigationManager.NavigateTo($"/instances?id={instance.Id}", false);
         }
+        else
+        {
+            _selectedInstanceId = null;
+        }
         
         return Task.CompletedTask;
+    }
+    
+    private void RestoreDataGridSelection()
+    {
+        if (!_selectedInstanceId.HasValue)
+        {
+            _selectedRows = new List<ProjectInstanceDto>();
+            return;
+        }
+        
+        // Find the previously selected instance in the new data
+        var selectedInstance = AllInstances.FirstOrDefault(i => i.Id == _selectedInstanceId.Value);
+        
+        if (selectedInstance != null)
+        {
+            // Restore selection
+            _selectedRows = new List<ProjectInstanceDto> { selectedInstance };
+        }
+        else
+        {
+            // Selected instance not in current page, clear selection
+            _selectedRows = new List<ProjectInstanceDto>();
+        }
     }
     
     private void OnLoadData(LoadDataArgs args)
