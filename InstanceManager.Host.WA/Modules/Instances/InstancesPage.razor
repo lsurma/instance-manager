@@ -33,7 +33,7 @@
 
 <DataLoader TResponse="List<ProjectInstanceDto>"
             TQuery="GetAllProjectInstancesQuery"
-            Query="new GetAllProjectInstancesQuery()"
+            Query="@_currentQuery"
             CacheKey="all_project_instances"
             RefreshToken="@_refreshToken"
             OnDataFetched="HandleDataFetched">
@@ -50,6 +50,7 @@
         
         <div style="display: @(_renderMode == RenderMode.DataGrid ? "block" : "none")">
             <RadzenDataGrid Data="@AllInstances" 
+                            LoadData="@OnLoadData"
                             TItem="ProjectInstanceDto" 
                             AllowFiltering="true" 
                             AllowSorting="true" 
@@ -57,8 +58,8 @@
                             PageSize="20"
                             FilterPopupRenderMode="PopupRenderMode.OnDemand"
                             SelectionMode="DataGridSelectionMode.Single"
-                            ValueChanged="@OnDataGridSelectionChanged"
-                            >
+                            Value="@_selectedRows"
+                            ValueChanged="@OnDataGridSelectionChanged">
                 <Columns>
                     <RadzenDataGridColumn TItem="ProjectInstanceDto" Property="Name" Title="Name" />
                     <RadzenDataGridColumn TItem="ProjectInstanceDto" Property="Description" Title="Description" />

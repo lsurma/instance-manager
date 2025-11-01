@@ -4,6 +4,8 @@ using InstanceManager.Host.WA.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.FluentUI.AspNetCore.Components;
+using Radzen;
+using Radzen.Blazor;
 
 namespace InstanceManager.Host.WA.Modules.Instances;
 
@@ -25,6 +27,8 @@ public partial class InstancesPage : ComponentBase, IDisposable
     private string _refreshToken = Guid.NewGuid().ToString();
     private RenderMode _renderMode = RenderMode.WebAwesomeTree;
     private IList<ProjectInstanceDto> _selectedRows = new List<ProjectInstanceDto>();
+    private bool _isGridInitialLoad = true;
+    private GetAllProjectInstancesQuery _currentQuery = new();
 
     protected override void OnInitialized()
     {
@@ -154,6 +158,36 @@ public partial class InstancesPage : ComponentBase, IDisposable
         }
         
         return Task.CompletedTask;
+    }
+    
+    private void OnLoadData(LoadDataArgs args)
+    {
+        _isGridInitialLoad = false;
+        
+        // Parse OrderBy from args
+        string? orderBy = null;
+        string? orderDirection = null;
+        
+        if (!string.IsNullOrEmpty(args.OrderBy))
+        {
+            // Parse OrderBy string (e.g., "Name" or "Name desc")
+            var orderByParts = args.OrderBy.Split(' ');
+            orderBy = orderByParts[0];
+            orderDirection = orderByParts.Length > 1 && orderByParts[1].ToLower() == "desc" ? "desc" : "asc";
+        }
+        
+        // Update query if parameters changed
+        if (_currentQuery.OrderBy != orderBy || _currentQuery.OrderDirection != orderDirection)
+        {
+            _currentQuery = new GetAllProjectInstancesQuery
+            {
+                OrderBy = orderBy,
+                OrderDirection = orderDirection
+            };
+            
+            // Trigger data refresh
+            _refreshToken = Guid.NewGuid().ToString();
+        }
     }
     
     private Guid? _selectedInstanceId;

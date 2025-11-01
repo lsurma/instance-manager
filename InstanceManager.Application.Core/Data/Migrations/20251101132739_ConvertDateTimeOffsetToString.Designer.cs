@@ -3,6 +3,7 @@ using System;
 using InstanceManager.Application.Core.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InstanceManager.Application.Core.Data.Migrations
 {
     [DbContext(typeof(InstanceManagerDbContext))]
-    partial class InstanceManagerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251101132739_ConvertDateTimeOffsetToString")]
+    partial class ConvertDateTimeOffsetToString
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
@@ -23,8 +26,9 @@ namespace InstanceManager.Application.Core.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<long>("CreatedAt")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("CreatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
@@ -50,8 +54,8 @@ namespace InstanceManager.Application.Core.Data.Migrations
                     b.Property<Guid?>("ParentProjectId")
                         .HasColumnType("TEXT");
 
-                    b.Property<long?>("UpdatedAt")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("UpdatedAt")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 

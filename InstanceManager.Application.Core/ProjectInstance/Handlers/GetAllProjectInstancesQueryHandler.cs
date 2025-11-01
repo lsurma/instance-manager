@@ -1,3 +1,4 @@
+using System.Linq.Dynamic.Core;
 using InstanceManager.Application.Contracts.ProjectInstance;
 using InstanceManager.Application.Core.Data;
 using MediatR;
@@ -16,9 +17,19 @@ public class GetAllProjectInstancesQueryHandler : IRequestHandler<GetAllProjectI
 
     public async Task<List<ProjectInstanceDto>> Handle(GetAllProjectInstancesQuery request, CancellationToken cancellationToken)
     {
-        var instances = await _context.ProjectInstances
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var query = _context.ProjectInstances.AsNoTracking();
+        
+        // Apply ordering if specified
+        if (!string.IsNullOrEmpty(request.OrderBy))
+        {
+            var orderDirection = string.IsNullOrEmpty(request.OrderDirection) || request.OrderDirection.ToLower() == "asc" 
+                ? "ascending" 
+                : "descending";
+            
+            query = query.OrderBy($"{request.OrderBy} {orderDirection}");
+        }
+        
+        var instances = await query.ToListAsync(cancellationToken);
 
         return instances.ToDto();
     }

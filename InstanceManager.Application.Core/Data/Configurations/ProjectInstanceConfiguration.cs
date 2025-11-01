@@ -24,6 +24,18 @@ public class ProjectInstanceConfiguration : IEntityTypeConfiguration<ProjectInst
         builder.Property(e => e.CreatedBy)
             .IsRequired()
             .HasMaxLength(100);
+        
+        // SQLite workaround: Store DateTimeOffset as UTC ticks for proper sorting/filtering
+        // This loses timezone information but ensures correct ordering in SQLite
+        builder.Property(e => e.CreatedAt)
+            .HasConversion(
+                v => v.UtcDateTime.Ticks,
+                v => new DateTimeOffset(v, TimeSpan.Zero));
+        
+        builder.Property(e => e.UpdatedAt)
+            .HasConversion(
+                v => v.HasValue ? v.Value.UtcDateTime.Ticks : (long?)null,
+                v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : (DateTimeOffset?)null);
 
         builder.HasOne(e => e.ParentProject)
             .WithMany(e => e.ChildProjects)
