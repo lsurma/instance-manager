@@ -1,4 +1,5 @@
 @page "/instances"
+@using InstanceManager.Application.Contracts.Common
 @using InstanceManager.Application.Contracts.ProjectInstance
 @using Radzen
 @using Radzen.Blazor
@@ -16,28 +17,28 @@
 
 <FluentStack Orientation="Orientation.Horizontal" VerticalGap="8">
     <FluentButton Appearance="@(_renderMode == RenderMode.FluentTree ? Appearance.Accent : Appearance.Neutral)"
-                  OnClick="@(() => _renderMode = RenderMode.FluentTree)">
+                  OnClick="@(() => SwitchRenderMode(RenderMode.FluentTree))">
         Fluent - Tree
     </FluentButton>
     <FluentButton Appearance="@(_renderMode == RenderMode.WebAwesomeTree ? Appearance.Accent : Appearance.Neutral)"
-                  OnClick="@(() => _renderMode = RenderMode.WebAwesomeTree)">
+                  OnClick="@(() => SwitchRenderMode(RenderMode.WebAwesomeTree))">
         WebAwesome - Tree
     </FluentButton>
     <FluentButton Appearance="@(_renderMode == RenderMode.DataGrid ? Appearance.Accent : Appearance.Neutral)"
-                  OnClick="@(() => _renderMode = RenderMode.DataGrid)">
+                  OnClick="@(() => SwitchRenderMode(RenderMode.DataGrid))">
         Data Grid
     </FluentButton>
 </FluentStack>
 
 <FluentDivider Style="margin: 16px 0;" />
 
-<DataLoader TResponse="List<ProjectInstanceDto>"
-            TQuery="GetAllProjectInstancesQuery"
+<DataLoader TResponse="PaginatedList<ProjectInstanceDto>"
+            TQuery="GetProjectInstancesQuery"
             Query="@_currentQuery"
-            CacheKey="all_project_instances"
+            CacheKey="@_cacheKey"
             RefreshToken="@_refreshToken"
             OnDataFetched="HandleDataFetched">
-    <ChildContent Context="instances">
+    <ChildContent Context="result">
         <div style="display: @(_renderMode == RenderMode.FluentTree ? "block" : "none")">
             <FluentTreeView Items="Items" SelectedItemChanged="SelectedItemChanged" SelectedItem="SelectedItem" />
         </div>
@@ -49,13 +50,29 @@
         </div>
         
         <div style="display: @(_renderMode == RenderMode.DataGrid ? "block" : "none")">
-            <RadzenDataGrid Data="@AllInstances" 
+            <FluentStack Orientation="Orientation.Horizontal" Style="margin-bottom: 16px;" VerticalAlignment="VerticalAlignment.Center">
+                <FluentSearch Placeholder="Search instances..."
+                             @bind-Value="@_searchTerm"
+                             @bind-Value:after="OnSearchChanged"
+                             Style="width: 300px;" />
+                @if (!string.IsNullOrWhiteSpace(_searchTerm))
+                {
+                    <FluentButton Appearance="Appearance.Lightweight"
+                                  IconStart="@(new Icons.Regular.Size20.Dismiss())"
+                                  OnClick="ClearSearch">
+                        Clear
+                    </FluentButton>
+                }
+            </FluentStack>
+            
+            <RadzenDataGrid Data="@AllInstances"
                             LoadData="@OnLoadData"
+                            Count="@_totalItems"
                             TItem="ProjectInstanceDto" 
                             AllowFiltering="true" 
                             AllowSorting="true" 
                             AllowPaging="true" 
-                            PageSize="20"
+                            PageSize="@_pageSize"
                             FilterPopupRenderMode="PopupRenderMode.OnDemand"
                             SelectionMode="DataGridSelectionMode.Single"
                             Value="@_selectedRows"

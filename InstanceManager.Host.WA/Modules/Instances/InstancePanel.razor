@@ -2,27 +2,32 @@
 @using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
 @implements IDialogContentComponent<InstancePanelParameters>
 
+<FluentKeyCode Only="@([KeyCode.Ctrl, KeyCode.KeyS])" OnKeyDown="@HandleKeyDownAsync">
 <FluentDialogBody>
     <EditForm Model="Content.Instance" OnSubmit="@(() => HandleSubmitAsync(false))">
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
             
             <FluentTextField @bind-Value="Content.Instance.Name"
                              Label="Name"
+                             Immediate="true"
                              Required
                              Style="width: 100%;" />
             
             <FluentTextArea @bind-Value="Content.Instance.Description"
                             Label="Description"
+                            Immediate="true"
                             Rows="3"
                             Style="width: 100%;" />
             
             <FluentTextField @bind-Value="Content.Instance.MainHost"
                              Label="Main Host"
+                             Immediate="true"
                              Placeholder="e.g., localhost:5000"
                              Style="width: 100%;" />
             
             <FluentTextArea @bind-Value="Content.Instance.Notes"
                             Label="Notes"
+                            Immediate="true"
                             Rows="4"
                             Style="width: 100%;" />
             
@@ -85,3 +90,4 @@
         </FluentButton>
     }
 </FluentDialogFooter>
+</FluentKeyCode>

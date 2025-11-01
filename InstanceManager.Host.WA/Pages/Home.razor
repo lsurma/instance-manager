@@ -1,5 +1,6 @@
-﻿@page "/"
+@page "/"
 @using InstanceManager.Application.Contracts
+@using InstanceManager.Application.Contracts.Common
 @using InstanceManager.Application.Contracts.ProjectInstance
 @using Radzen.Blazor
 
@@ -25,7 +26,8 @@ Welcome to your new Fluent Blazor app.
     
     private async Task SendTestRequest(MouseEventArgs arg)
     {
-        ProjectInstances = await RequestSender.SendAsync(new GetAllProjectInstancesQuery());
+        var result = await RequestSender.SendAsync<PaginatedList<ProjectInstanceDto>>(new GetProjectInstancesQuery());
+        ProjectInstances = result.Items;
 
         _ = 1;
 

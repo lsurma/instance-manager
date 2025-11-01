@@ -1,6 +1,7 @@
 using InstanceManager.Application.Contracts;
 using InstanceManager.Application.Contracts.ProjectInstance;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.FluentUI.AspNetCore.Components;
 
 namespace InstanceManager.Host.WA.Modules.Instances;
@@ -25,6 +26,15 @@ public partial class InstancePanel : IDialogContentComponent<InstancePanelParame
     private bool IsSaving { get; set; }
     private bool IsDeleting { get; set; }
     private string? ErrorMessage { get; set; }
+    
+    private async Task HandleKeyDownAsync(FluentKeyCodeEventArgs args)
+    {
+        // Ctrl+S to save
+        if (args.CtrlKey && args.Key == KeyCode.KeyS)
+        {
+            await HandleSubmitAsync(closeAfterSave: false);
+        }
+    }
     
     private List<Option<Guid?>> ParentSelectItems
     {

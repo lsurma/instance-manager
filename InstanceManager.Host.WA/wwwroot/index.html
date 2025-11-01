@@ -32,6 +32,13 @@
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="_content/Radzen.Blazor/Radzen.Blazor.min.js"></script>
+    <script>
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+            }
+        });
+    </script>
 </body>
 
 </html>

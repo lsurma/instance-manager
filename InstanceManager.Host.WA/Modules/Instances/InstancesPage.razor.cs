@@ -1,3 +1,4 @@
+using InstanceManager.Application.Contracts.Common;
 using InstanceManager.Application.Contracts.ProjectInstance;
 using InstanceManager.Host.WA.Components;
 using InstanceManager.Host.WA.Services;
@@ -27,36 +28,72 @@ public partial class InstancesPage : ComponentBase, IDisposable
     private string _refreshToken = Guid.NewGuid().ToString();
     private RenderMode _renderMode = RenderMode.WebAwesomeTree;
     private IList<ProjectInstanceDto> _selectedRows = new List<ProjectInstanceDto>();
-    private bool _isGridInitialLoad = true;
-    private GetAllProjectInstancesQuery _currentQuery = new();
+    private GetProjectInstancesQuery _currentQuery = GetProjectInstancesQuery.AllItems();
+    private string _cacheKey = "all_project_instances";
+    private int _totalItems = 0;
+    private int _pageSize = 20;
+    private string? _searchTerm;
 
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += OnLocationChanged;
+        UpdateQueryForRenderMode();
     }
     
-    private async void HandleDataFetched(DataFetchedEventArgs<List<ProjectInstanceDto>> eventArgs)
+    private void HandleDataFetched(DataFetchedEventArgs<PaginatedList<ProjectInstanceDto>> eventArgs)
     {
-        AllInstances = eventArgs.Data;
+        AllInstances = eventArgs.Data.Items;
+        _totalItems = eventArgs.Data.TotalItems;
+        _pageSize = eventArgs.Data.PageSize;
         
         // Log fetch information for debugging
-        Console.WriteLine($"Data fetched - IsFromCache: {eventArgs.IsFromCache}, IsFirstFetch: {eventArgs.IsFirstFetch}");
+        Console.WriteLine($"Data fetched - IsFromCache: {eventArgs.IsFromCache}, IsFirstFetch: {eventArgs.IsFirstFetch}, Total: {_totalItems}, Page: {eventArgs.Data.CurrentPage}");
         
-        // Get root instances (no parent)
-        var rootInstances = eventArgs.Data.Where(i => i.ParentProjectId == null).ToList();
+        // Get root instances (no parent) for tree views
+        var rootInstances = eventArgs.Data.Items.Where(i => i.ParentProjectId == null).ToList();
 
         // Update the tree in-place to preserve object references
-        UpdateTreeItems(Items, rootInstances, eventArgs.Data);
+        UpdateTreeItems(Items, rootInstances, eventArgs.Data.Items);
         
         // Process URL parameters on first live data fetch (e.g., direct link with ?id=xxx)
         if (eventArgs.IsFirstFetch && !eventArgs.IsFromCache)
         {
-            await ProcessUrlParametersAsync();
+            _ = ProcessUrlParametersAsync();
         }
 
         StateHasChanged();
     }
 
+    private void SwitchRenderMode(RenderMode newMode)
+    {
+        if (_renderMode == newMode)
+            return;
+            
+        _renderMode = newMode;
+        UpdateQueryForRenderMode();
+        _refreshToken = Guid.NewGuid().ToString();
+    }
+    
+    private void UpdateQueryForRenderMode()
+    {
+        if (_renderMode == RenderMode.DataGrid)
+        {
+            // DataGrid uses pagination
+            _currentQuery = new GetProjectInstancesQuery
+            {
+                PageNumber = 1,
+                PageSize = 15
+            };
+            _cacheKey = "paginated_project_instances";
+        }
+        else
+        {
+            // Tree views need all items
+            _currentQuery = GetProjectInstancesQuery.AllItems();
+            _cacheKey = "all_project_instances";
+        }
+    }
+    
     private void UpdateTreeItems(List<ITreeViewItem> treeItems, List<ProjectInstanceDto> currentLevelInstances, List<ProjectInstanceDto> allInstances)
     {
         // Get current IDs in the tree
@@ -162,8 +199,6 @@ public partial class InstancesPage : ComponentBase, IDisposable
     
     private void OnLoadData(LoadDataArgs args)
     {
-        _isGridInitialLoad = false;
-        
         // Parse OrderBy from args
         string? orderBy = null;
         string? orderDirection = null;
@@ -176,18 +211,55 @@ public partial class InstancesPage : ComponentBase, IDisposable
             orderDirection = orderByParts.Length > 1 && orderByParts[1].ToLower() == "desc" ? "desc" : "asc";
         }
         
+        var skip = args.Skip ?? 0;
+        var pageSize = args.Top ?? 20;
+        
         // Update query if parameters changed
-        if (_currentQuery.OrderBy != orderBy || _currentQuery.OrderDirection != orderDirection)
+        if (_currentQuery.OrderBy != orderBy || 
+            _currentQuery.OrderDirection != orderDirection ||
+            _currentQuery.Skip != skip ||
+            _currentQuery.PageSize != pageSize ||
+            _currentQuery.SearchTerm != _searchTerm)
         {
-            _currentQuery = new GetAllProjectInstancesQuery
+            _currentQuery = new GetProjectInstancesQuery
             {
+                SearchTerm = _searchTerm,
                 OrderBy = orderBy,
-                OrderDirection = orderDirection
+                OrderDirection = orderDirection,
+                Skip = skip,
+                PageSize = pageSize
             };
+            
+            _cacheKey = string.IsNullOrWhiteSpace(_searchTerm) 
+                ? "paginated_project_instances" 
+                : $"search_{_searchTerm}_paginated";
             
             // Trigger data refresh
             _refreshToken = Guid.NewGuid().ToString();
         }
+    }
+    
+    private void OnSearchChanged()
+    {
+        // Reset to first page when search changes
+        _currentQuery = new GetProjectInstancesQuery
+        {
+            SearchTerm = _searchTerm,
+            Skip = 0,
+            PageSize = _pageSize
+        };
+        
+        _cacheKey = string.IsNullOrWhiteSpace(_searchTerm) 
+            ? "paginated_project_instances" 
+            : $"search_{_searchTerm}_paginated";
+        
+        _refreshToken = Guid.NewGuid().ToString();
+    }
+    
+    private void ClearSearch()
+    {
+        _searchTerm = null;
+        OnSearchChanged();
     }
     
     private Guid? _selectedInstanceId;
