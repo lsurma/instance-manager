@@ -1,5 +1,5 @@
 ﻿<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="InstanceManager.Host.WA: https" type="LaunchSettings" factoryName=".NET Launch Settings Profile" singleton="false">
+  <configuration default="false" name="InstanceManager.Host.WA: https" type="LaunchSettings" factoryName=".NET Launch Settings Profile" singleton="true">
     <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/InstanceManager.Host.WA/InstanceManager.Host.WA.csproj" />
     <option name="LAUNCH_PROFILE_TFM" value="net9.0" />
     <option name="LAUNCH_PROFILE_NAME" value="https" />

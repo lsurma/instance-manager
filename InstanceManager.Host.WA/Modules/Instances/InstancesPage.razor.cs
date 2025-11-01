@@ -37,15 +37,18 @@ public partial class InstancesPage : ComponentBase, IDisposable
         }
     }
     
-    private void HandleDataFetched(List<ProjectInstanceDto> instances)
+    private void HandleDataFetched(DataFetchedEventArgs<List<ProjectInstanceDto>> eventArgs)
     {
-        AllInstances = instances;
+        AllInstances = eventArgs.Data;
+        
+        // Log fetch information for debugging
+        Console.WriteLine($"Data fetched - IsFromCache: {eventArgs.IsFromCache}, IsFirstFetch: {eventArgs.IsFirstFetch}");
         
         // Get root instances (no parent)
-        var rootInstances = instances.Where(i => i.ParentProjectId == null).ToList();
+        var rootInstances = eventArgs.Data.Where(i => i.ParentProjectId == null).ToList();
 
         // Update the tree in-place to preserve object references
-        UpdateTreeItems(Items, rootInstances, instances);
+        UpdateTreeItems(Items, rootInstances, eventArgs.Data);
 
         StateHasChanged();
     }
@@ -106,7 +109,6 @@ public partial class InstancesPage : ComponentBase, IDisposable
 
     private async void SelectedItemChanged(ITreeViewItem? item)
     {
-        SelectedItem = item;
         var idInUrl = NavHelper.GetQueryParameter("id");
         
         if (item != null && Guid.TryParse(item.Id, out var instanceId))
@@ -137,27 +139,37 @@ public partial class InstancesPage : ComponentBase, IDisposable
             
             if (action == "create")
             {
+                SelectedItem = null;
                 await OpenInstancePanelAsync(null);
             }
             else if (!string.IsNullOrEmpty(idParam) && Guid.TryParse(idParam, out var instanceId))
             {
                 var instance = AllInstances.FirstOrDefault(i => i.Id == instanceId);
+
                 if (instance != null)
                 {
+                    SelectedItem = Items.FirstOrDefault(i => i.Id == instanceId.ToString());
                     await OpenInstancePanelAsync(instance);
                 }
             }
-            else if (_currentDialog != null)
+            else
             {
-                // No query params, close any open dialog
-                await _currentDialog.CloseAsync();
-                _currentDialog = null;
+                SelectedItem = null;
+                
+                 if (_currentDialog != null)
+                 {
+                    // No query params, close any open dialog
+                    await _currentDialog.CloseAsync();
+                    _currentDialog = null;
+                 }
             }
         }
         catch
         {
             
         }
+        
+        StateHasChanged();
     }
     
     private async Task OpenInstancePanelAsync(ProjectInstanceDto? instance = null)
@@ -213,9 +225,13 @@ public partial class InstancesPage : ComponentBase, IDisposable
 
         var result = await _currentDialog.Result;
         _currentDialog = null;
+        var currentId = NavHelper.GetQueryParameter("id");
         
-        // Clear URL parameters when dialog closes
-        // NavigationManager.NavigateTo("/instances", false);
+        if(currentId == instance?.Id.ToString())
+        {
+            // Clear URL parameters after closing the panel
+            NavigationManager.NavigateTo("/instances", false);
+        }
         
         if (!result.Cancelled)
         {

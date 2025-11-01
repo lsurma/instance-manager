@@ -77,12 +77,14 @@ else if (Data != null)
     public required RenderFragment<TResponse> ChildContent { get; set; }
 
     [Parameter]
-    public EventCallback<TResponse> OnDataFetched { get; set; }
+    public EventCallback<DataFetchedEventArgs<TResponse>> OnDataFetched { get; set; }
 
     private TResponse? Data { get; set; }
     private bool IsLoading { get; set; } = true;
     private string? ErrorMessage { get; set; }
     private string? _previousRefreshToken;
+    private bool _isFirstCachedFetch = true;
+    private bool _isFirstLiveFetch = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -122,7 +124,13 @@ else if (Data != null)
                     // Notify that cached data is available
                     if (OnDataFetched.HasDelegate)
                     {
-                        await OnDataFetched.InvokeAsync(cachedData);
+                        var eventArgs = new DataFetchedEventArgs<TResponse>(
+                            cachedData,
+                            IsFromCache: true,
+                            IsFirstFetch: _isFirstCachedFetch
+                        );
+                        _isFirstCachedFetch = false;
+                        await OnDataFetched.InvokeAsync(eventArgs);
                     }
 
                     StateHasChanged();
@@ -145,7 +153,13 @@ else if (Data != null)
             // Notify that fresh data is available
             if (OnDataFetched.HasDelegate)
             {
-                await OnDataFetched.InvokeAsync(freshData);
+                var eventArgs = new DataFetchedEventArgs<TResponse>(
+                    freshData,
+                    IsFromCache: false,
+                    IsFirstFetch: _isFirstLiveFetch
+                );
+                _isFirstLiveFetch = false;
+                await OnDataFetched.InvokeAsync(eventArgs);
             }
         }
         catch (Exception ex)
