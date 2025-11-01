@@ -3,13 +3,24 @@
 
 <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
     <h3 style="margin: 0;">Project Instances</h3>
-        
     
     <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
         <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Add())" />
     </FluentNavLink>
 </FluentStack>
-    
+
+<FluentDivider Style="margin: 16px 0;" />
+
+<FluentStack Orientation="Orientation.Horizontal" VerticalGap="8">
+    <FluentButton Appearance="@(_renderMode == RenderMode.FluentTree ? Appearance.Accent : Appearance.Neutral)"
+                  OnClick="@(() => _renderMode = RenderMode.FluentTree)">
+        Fluent - Tree
+    </FluentButton>
+    <FluentButton Appearance="@(_renderMode == RenderMode.WebAwesomeTree ? Appearance.Accent : Appearance.Neutral)"
+                  OnClick="@(() => _renderMode = RenderMode.WebAwesomeTree)">
+        WebAwesome - Tree
+    </FluentButton>
+</FluentStack>
 
 <FluentDivider Style="margin: 16px 0;" />
 
@@ -20,7 +31,16 @@
             RefreshToken="@_refreshToken"
             OnDataFetched="HandleDataFetched">
     <ChildContent Context="instances">
-        <FluentTreeView Items="Items" SelectedItemChanged="SelectedItemChanged" SelectedItem="SelectedItem" />
+        @if (_renderMode == RenderMode.FluentTree)
+        {
+            <FluentTreeView Items="Items" SelectedItemChanged="SelectedItemChanged" SelectedItem="SelectedItem" />
+        }
+        else if (_renderMode == RenderMode.WebAwesomeTree)
+        {
+            <InstancesWebAwesomeTree AllInstances="AllInstances" 
+                                     SelectedInstanceId="GetSelectedInstanceId()" 
+                                     OnInstanceSelected="HandleWebAwesomeItemSelected" />
+        }
     </ChildContent>
 </DataLoader>
 

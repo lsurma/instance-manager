@@ -82,7 +82,7 @@ public partial class InstancePanel : IDialogContentComponent<InstancePanelParame
             // Close dialog with success result if requested
             if (closeAfterSave)
             {
-                await Dialog!.CloseAsync(Content.Instance);
+                await Dialog!.CloseAsync(DialogResult.Cancel(Content.Instance));
             }
         }
         catch (Exception ex)

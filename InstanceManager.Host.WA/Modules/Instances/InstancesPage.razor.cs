@@ -23,21 +23,14 @@ public partial class InstancesPage : ComponentBase, IDisposable
     private List<ProjectInstanceDto> AllInstances { get; set; } = new();
     private IDialogReference? _currentDialog;
     private string _refreshToken = Guid.NewGuid().ToString();
+    private RenderMode _renderMode = RenderMode.FluentTree;
 
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += OnLocationChanged;
     }
     
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await ProcessUrlParametersAsync();
-        }
-    }
-    
-    private void HandleDataFetched(DataFetchedEventArgs<List<ProjectInstanceDto>> eventArgs)
+    private async void HandleDataFetched(DataFetchedEventArgs<List<ProjectInstanceDto>> eventArgs)
     {
         AllInstances = eventArgs.Data;
         
@@ -49,6 +42,12 @@ public partial class InstancesPage : ComponentBase, IDisposable
 
         // Update the tree in-place to preserve object references
         UpdateTreeItems(Items, rootInstances, eventArgs.Data);
+        
+        // Process URL parameters on first live data fetch (e.g., direct link with ?id=xxx)
+        if (eventArgs.IsFirstFetch && !eventArgs.IsFromCache)
+        {
+            await ProcessUrlParametersAsync();
+        }
 
         StateHasChanged();
     }
@@ -121,6 +120,21 @@ public partial class InstancesPage : ComponentBase, IDisposable
             // Clear URL parameters
             NavigationManager.NavigateTo("/instances", false);
         }
+    }
+    
+    private void HandleWebAwesomeItemSelected(Guid instanceId)
+    {
+        // Update URL with instance ID
+        NavigationManager.NavigateTo($"/instances?id={instanceId}", false);
+    }
+    
+    private Guid? GetSelectedInstanceId()
+    {
+        if (SelectedItem != null && Guid.TryParse(SelectedItem.Id, out var instanceId))
+        {
+            return instanceId;
+        }
+        return null;
     }
     
     private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
@@ -227,21 +241,24 @@ public partial class InstancesPage : ComponentBase, IDisposable
         _currentDialog = null;
         var currentId = NavHelper.GetQueryParameter("id");
         
-        if(currentId == instance?.Id.ToString())
+        if(result.Cancelled && currentId == instance?.Id.ToString())
         {
             // Clear URL parameters after closing the panel
             NavigationManager.NavigateTo("/instances", false);
         }
         
-        if (!result.Cancelled)
-        {
-            // Refresh the data after saving
-            StateHasChanged();
-        }
+        // Refresh the data after saving
+        StateHasChanged();
     }
     
     public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
+}
+
+public enum RenderMode
+{
+    FluentTree,
+    WebAwesomeTree
 }

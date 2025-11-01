@@ -1,0 +1,53 @@
+@using InstanceManager.Application.Contracts.ProjectInstance
+@using InstanceManager.Host.WA.CustomEvents
+
+<wa-tree selection="single" class="tree-selectable tree-with-lines" @onWaSelectionChange="HandleSelectionChange">
+    @foreach (var instance in RootInstances)
+    {
+        @RenderTreeItem(instance)
+    }
+</wa-tree>
+
+@code {
+    [Parameter]
+    public List<ProjectInstanceDto> AllInstances { get; set; } = new();
+    
+    [Parameter]
+    public Guid? SelectedInstanceId { get; set; }
+    
+    [Parameter]
+    public EventCallback<Guid> OnInstanceSelected { get; set; }
+    
+    private List<ProjectInstanceDto> RootInstances => 
+        AllInstances.Where(i => i.ParentProjectId == null).ToList();
+    
+    private RenderFragment RenderTreeItem(ProjectInstanceDto instance) => __builder =>
+    {
+        var children = AllInstances.Where(i => i.ParentProjectId == instance.Id).ToList();
+        
+        <wa-tree-item @key="instance.Id" 
+                      data-id="@instance.Id"
+                      selected="@(instance.Id == SelectedInstanceId)">
+            @instance.Name
+            
+            @if (children.Any())
+            {
+                @foreach (var child in children)
+                {
+                    @RenderTreeItem(child)
+                }
+            }
+        </wa-tree-item>
+    };
+    
+    private async Task HandleSelectionChange(WebAwesomeSelectionChangeEventArgs args)
+    {
+        if (!string.IsNullOrEmpty(args.SelectedId) && Guid.TryParse(args.SelectedId, out var guid))
+        {
+            if (OnInstanceSelected.HasDelegate)
+            {
+                await OnInstanceSelected.InvokeAsync(guid);
+            }
+        }
+    }
+}
