@@ -10,9 +10,9 @@ namespace InstanceManager.Application.Core.Modules.Translations.Handlers;
 public class GetTranslationsQueryHandler : IRequestHandler<GetTranslationsQuery, PaginatedList<TranslationDto>>
 {
     private readonly InstanceManagerDbContext _context;
-    private readonly IQueryService<Translation> _queryService;
+    private readonly TranslationsQueryService _queryService;
 
-    public GetTranslationsQueryHandler(InstanceManagerDbContext context, IQueryService<Translation> queryService)
+    public GetTranslationsQueryHandler(InstanceManagerDbContext context, TranslationsQueryService queryService)
     {
         _context = context;
         _queryService = queryService;
@@ -22,6 +22,7 @@ public class GetTranslationsQueryHandler : IRequestHandler<GetTranslationsQuery,
     {
         var query = _context.Translations.AsNoTracking();
 
+        // Query service automatically applies authorization pre-filtering
         query = await _queryService.PrepareQueryAsync(
             query,
             request.Filtering,

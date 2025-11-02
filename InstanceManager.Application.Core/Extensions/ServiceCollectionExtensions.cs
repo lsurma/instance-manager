@@ -1,6 +1,7 @@
 using System.Reflection;
 using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
+using InstanceManager.Application.Core.Modules.Translations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,6 +18,12 @@ public static class ServiceCollectionExtensions
 
         // Register generic query service
         services.AddScoped(typeof(IQueryService<>), typeof(QueryService<>));
+
+        // Register authorization service (mock for now)
+        services.AddScoped<IAuthorizationService, MockAuthorizationService>();
+
+        // Register specialized query services
+        services.AddScoped<TranslationsQueryService>();
 
         services.AddSingleton<IFilterHandlerRegistry, FilterHandlerRegistry>();
 

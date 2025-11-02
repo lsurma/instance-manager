@@ -99,7 +99,7 @@ public class QueryService<TEntity> : IQueryService<TEntity> where TEntity : clas
     /// <summary>
     /// Prepares a query by applying filters, includes, and ordering (but not pagination)
     /// </summary>
-    public async Task<IQueryable<TEntity>> PrepareQueryAsync(
+    public virtual async Task<IQueryable<TEntity>> PrepareQueryAsync(
         IQueryable<TEntity> query,
         FilteringParameters filtering,
         OrderingParameters ordering,
