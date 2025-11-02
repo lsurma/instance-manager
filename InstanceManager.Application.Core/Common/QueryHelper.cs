@@ -37,6 +37,12 @@ public interface IQueryService
 
 public class QueryService : IQueryService
 {
+    private readonly IFilterHandlerRegistry _filterHandlerRegistry;
+    
+    public QueryService(IFilterHandlerRegistry filterHandlerRegistry)
+    {
+        _filterHandlerRegistry = filterHandlerRegistry;
+    }
     /// <summary>
     /// Applies ordering to a queryable if ordering parameters are specified
     /// </summary>
@@ -118,7 +124,7 @@ public class QueryService : IQueryService
     }
 
     /// <summary>
-    /// Prepares a query by applying search, includes, and ordering (but not pagination)
+    /// Prepares a query by applying filters, search, includes, and ordering (but not pagination)
     /// </summary>
     public IQueryable<TEntity> PrepareQuery<TEntity>(
         IQueryable<TEntity> query,
@@ -126,6 +132,35 @@ public class QueryService : IQueryService
         OrderingParameters ordering,
         QueryOptions<TEntity>? options = null)
     {
+        // Apply custom filters first (e.g., DataSetId, CultureName)
+        if (filtering.HasQueryFilters())
+        {
+            var filterHandlers = _filterHandlerRegistry.GetHandlersForEntity<TEntity>();
+            
+            foreach (var filter in filtering.QueryFilters.Where(f => f.IsActive()))
+            {
+                var filterType = filter.GetType();
+                if (filterHandlers.TryGetValue(filterType, out var handler))
+                {
+                    // Get the GetFilterExpression method via reflection
+                    var handlerType = handler.GetType();
+                    var method = handlerType.GetMethod("GetFilterExpression");
+                    if (method != null)
+                    {
+                        var expression = method.Invoke(handler, new object[] { filter });
+                        if (expression != null)
+                        {
+                            // Apply the expression to the query
+                            var whereMethod = typeof(Queryable).GetMethods()
+                                .First(m => m.Name == "Where" && m.GetParameters().Length == 2)
+                                .MakeGenericMethod(typeof(TEntity));
+                            query = (IQueryable<TEntity>)whereMethod.Invoke(null, new[] { query, expression })!;
+                        }
+                    }
+                }
+            }
+        }
+        
         if (options != null)
         {
             // Apply search predicate if provided

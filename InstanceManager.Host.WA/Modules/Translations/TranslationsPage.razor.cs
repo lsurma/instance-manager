@@ -38,6 +38,7 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     private int _totalItems = 0;
     private int _pageSize = 20;
     private string? _searchTerm;
+    private string? _cultureNameFilter;
     private Guid? _selectedTranslationId;
 
     protected override void OnInitialized()
@@ -132,15 +133,22 @@ public partial class TranslationsPage : ComponentBase, IDisposable
         var skip = args.Skip ?? 0;
         var pageSize = args.Top ?? 20;
         
+        var hasFiltersChanged = _currentQuery.Filtering.SearchTerm != _searchTerm ||
+                                !HasSameCultureFilter(_currentQuery.Filtering.QueryFilters);
+        
         if (_currentQuery.Ordering.OrderBy != orderBy || 
             _currentQuery.Ordering.OrderDirection != orderDirection ||
             _currentQuery.Pagination.Skip != skip ||
             _currentQuery.Pagination.PageSize != pageSize ||
-            _currentQuery.Filtering.SearchTerm != _searchTerm)
+            hasFiltersChanged)
         {
             _currentQuery = new GetTranslationsQuery
             {
-                Filtering = new FilteringParameters { SearchTerm = _searchTerm },
+                Filtering = new FilteringParameters 
+                { 
+                    SearchTerm = _searchTerm,
+                    QueryFilters = BuildQueryFilters()
+                },
                 Ordering = new OrderingParameters { OrderBy = orderBy, OrderDirection = orderDirection },
                 Pagination = new PaginationParameters { Skip = skip, PageSize = pageSize }
             };
@@ -157,21 +165,86 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     {
         _currentQuery = new GetTranslationsQuery
         {
-            Filtering = new FilteringParameters { SearchTerm = _searchTerm },
+            Filtering = new FilteringParameters 
+            { 
+                SearchTerm = _searchTerm,
+                QueryFilters = BuildQueryFilters()
+            },
             Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
         };
         
-        _cacheKey = string.IsNullOrWhiteSpace(_searchTerm) 
-            ? "paginated_translations" 
-            : $"search_{_searchTerm}_translations_paginated";
-        
+        UpdateCacheKey();
         _refreshToken = Guid.NewGuid().ToString();
+    }
+    
+    private void OnCultureFilterChanged()
+    {
+        _currentQuery = new GetTranslationsQuery
+        {
+            Filtering = new FilteringParameters 
+            { 
+                SearchTerm = _searchTerm,
+                QueryFilters = BuildQueryFilters()
+            },
+            Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
+        };
+        
+        UpdateCacheKey();
+        _refreshToken = Guid.NewGuid().ToString();
+    }
+    
+    private List<IQueryFilter> BuildQueryFilters()
+    {
+        var filters = new List<IQueryFilter>();
+        
+        if (!string.IsNullOrWhiteSpace(_cultureNameFilter))
+        {
+            filters.Add(new CultureNameFilter { Value = _cultureNameFilter });
+        }
+        
+        return filters;
+    }
+    
+    private bool HasSameCultureFilter(List<IQueryFilter> filters)
+    {
+        var existingCultureFilter = filters.OfType<CultureNameFilter>().FirstOrDefault();
+        
+        if (string.IsNullOrWhiteSpace(_cultureNameFilter))
+        {
+            return existingCultureFilter == null;
+        }
+        
+        return existingCultureFilter?.Value == _cultureNameFilter;
+    }
+    
+    private void UpdateCacheKey()
+    {
+        var keyParts = new List<string> { "translations" };
+        
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            keyParts.Add($"search_{_searchTerm}");
+        }
+        
+        if (!string.IsNullOrWhiteSpace(_cultureNameFilter))
+        {
+            keyParts.Add($"culture_{_cultureNameFilter}");
+        }
+        
+        keyParts.Add("paginated");
+        _cacheKey = string.Join("_", keyParts);
     }
     
     private void ClearSearch()
     {
         _searchTerm = null;
         OnSearchChanged();
+    }
+    
+    private void ClearCultureFilter()
+    {
+        _cultureNameFilter = null;
+        OnCultureFilterChanged();
     }
     
     private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)

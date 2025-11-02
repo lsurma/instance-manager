@@ -2,6 +2,7 @@ using InstanceManager.Application.Contracts.Common;
 using InstanceManager.Application.Contracts.Modules.Translations;
 using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
+using InstanceManager.Application.Core.Modules.Translations.Filters;
 using InstanceManager.Application.Core.Modules.Translations.Specifications;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -22,17 +23,6 @@ public class GetTranslationsQueryHandler : IRequestHandler<GetTranslationsQuery,
     public async Task<PaginatedList<TranslationDto>> Handle(GetTranslationsQuery request, CancellationToken cancellationToken)
     {
         var query = _context.Translations.AsNoTracking();
-        
-        // Apply module-specific filters
-        if (request.DataSetId.HasValue)
-        {
-            query = query.Where(t => t.DataSetId == request.DataSetId.Value);
-        }
-        
-        if (!string.IsNullOrWhiteSpace(request.CultureName))
-        {
-            query = query.Where(t => t.CultureName == request.CultureName);
-        }
         
         query = _queryService.PrepareQuery(
             query,

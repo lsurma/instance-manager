@@ -35,6 +35,19 @@
                     Clear
                 </FluentButton>
             }
+            
+            <FluentTextField Placeholder="Filter by culture (e.g., en-US)..."
+                            @bind-Value="@_cultureNameFilter"
+                            @bind-Value:after="OnCultureFilterChanged"
+                            Style="width: 250px;" />
+            @if (!string.IsNullOrWhiteSpace(_cultureNameFilter))
+            {
+                <FluentButton Appearance="Appearance.Lightweight"
+                              IconStart="@(new Icons.Regular.Size20.Dismiss())"
+                              OnClick="ClearCultureFilter">
+                    Clear Culture
+                </FluentButton>
+            }
         </FluentStack>
         
         <RadzenDataGrid Data="@AllTranslations"
