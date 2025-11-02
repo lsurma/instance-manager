@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InstanceManager.Application.Core.Data.Configurations;
 
-public class ProjectInstanceConfiguration : IEntityTypeConfiguration<ProjectInstance.ProjectInstance>
+public class ProjectInstanceConfiguration : IEntityTypeConfiguration<Modules.ProjectInstance.ProjectInstance>
 {
-    public void Configure(EntityTypeBuilder<ProjectInstance.ProjectInstance> builder)
+    public void Configure(EntityTypeBuilder<Modules.ProjectInstance.ProjectInstance> builder)
     {
         builder.HasKey(e => e.Id);
 

@@ -1,5 +1,5 @@
 using InstanceManager.Application.Contracts.Common;
-using InstanceManager.Application.Contracts.ProjectInstance;
+using InstanceManager.Application.Contracts.Modules.ProjectInstance;
 using InstanceManager.Host.WA.Components;
 using InstanceManager.Host.WA.Services;
 using Microsoft.AspNetCore.Components;

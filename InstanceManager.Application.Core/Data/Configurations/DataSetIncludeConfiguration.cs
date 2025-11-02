@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InstanceManager.Application.Core.Data.Configurations;
 
-public class DataSetIncludeConfiguration : IEntityTypeConfiguration<DataSet.DataSetInclude>
+public class DataSetIncludeConfiguration : IEntityTypeConfiguration<Modules.DataSet.DataSetInclude>
 {
-    public void Configure(EntityTypeBuilder<DataSet.DataSetInclude> builder)
+    public void Configure(EntityTypeBuilder<Modules.DataSet.DataSetInclude> builder)
     {
         builder.HasKey(e => new { e.ParentDataSetId, e.IncludedDataSetId });
 

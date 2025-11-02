@@ -1,5 +1,5 @@
 using InstanceManager.Application.Contracts;
-using InstanceManager.Application.Contracts.ProjectInstance;
+using InstanceManager.Application.Contracts.Modules.ProjectInstance;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.FluentUI.AspNetCore.Components;

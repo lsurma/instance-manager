@@ -1,5 +1,5 @@
 using InstanceManager.Application.Contracts;
-using InstanceManager.Application.Contracts.DataSet;
+using InstanceManager.Application.Contracts.Modules.DataSet;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.FluentUI.AspNetCore.Components;

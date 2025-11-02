@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InstanceManager.Application.Core.Data.Configurations;
 
-public class DataSetConfiguration : IEntityTypeConfiguration<DataSet.DataSet>
+public class DataSetConfiguration : IEntityTypeConfiguration<Modules.DataSet.DataSet>
 {
-    public void Configure(EntityTypeBuilder<DataSet.DataSet> builder)
+    public void Configure(EntityTypeBuilder<Modules.DataSet.DataSet> builder)
     {
         builder.HasKey(e => e.Id);
 
