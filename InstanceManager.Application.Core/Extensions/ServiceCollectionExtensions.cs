@@ -14,10 +14,12 @@ public static class ServiceCollectionExtensions
             options.UseSqlite(connectionString));
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly));
-        
-        services.AddScoped<IQueryService, QueryService>();
+
+        // Register generic query service
+        services.AddScoped(typeof(IQueryService<>), typeof(QueryService<>));
+
         services.AddSingleton<IFilterHandlerRegistry, FilterHandlerRegistry>();
-        
+
         // Register all filter handlers
         RegisterFilterHandlers(services);
 

@@ -5,63 +5,78 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InstanceManager.Application.Core.Common;
 
+/// <summary>
+/// Base marker interface for query services
+/// </summary>
 public interface IQueryService
 {
-    IQueryable<T> ApplyOrdering<T>(IQueryable<T> query, OrderingParameters ordering);
-    IQueryable<T> ApplyPagination<T>(IQueryable<T> query, PaginationParameters pagination);
-    Task<PaginatedList<TDto>> ToPaginatedListAsync<TEntity, TDto>(
+}
+
+/// <summary>
+/// Generic query service interface for a specific entity type
+/// </summary>
+public interface IQueryService<TEntity> : IQueryService where TEntity : class
+{
+    IQueryable<TEntity> ApplyOrdering(IQueryable<TEntity> query, OrderingParameters ordering);
+    IQueryable<TEntity> ApplyPagination(IQueryable<TEntity> query, PaginationParameters pagination);
+    Task<PaginatedList<TDto>> ToPaginatedListAsync<TDto>(
         IQueryable<TEntity> query,
         PaginationParameters pagination,
         Func<List<TEntity>, List<TDto>> mapper,
         CancellationToken cancellationToken = default);
-    IQueryable<T> ApplyTextSearch<T>(
-        IQueryable<T> query,
+    IQueryable<TEntity> ApplyTextSearch(
+        IQueryable<TEntity> query,
         FilteringParameters filtering,
-        Func<string, IQueryable<T>, IQueryable<T>> searchPredicate);
-    
-    IQueryable<TEntity> ApplySpecification<TEntity>(
+        Func<string, IQueryable<TEntity>, IQueryable<TEntity>> searchPredicate);
+
+    IQueryable<TEntity> ApplySpecification(
         IQueryable<TEntity> query,
         FilteringParameters filtering,
         Func<string, IBasicSpecification<TEntity>> specificationFactory);
-    Task<IQueryable<TEntity>> PrepareQueryAsync<TEntity>(
+    Task<IQueryable<TEntity>> PrepareQueryAsync(
         IQueryable<TEntity> query,
         FilteringParameters filtering,
         OrderingParameters ordering,
         QueryOptions<TEntity>? options = null,
         CancellationToken cancellationToken = default);
 
-    Task<PaginatedList<TDto>> ExecutePaginatedQueryAsync<TEntity, TDto>(
+    Task<PaginatedList<TDto>> ExecutePaginatedQueryAsync<TDto>(
         IQueryable<TEntity> query,
         PaginationParameters pagination,
         Func<List<TEntity>, List<TDto>> mapper,
         CancellationToken cancellationToken = default);
 }
 
-public class QueryService : IQueryService
+/// <summary>
+/// Generic query service implementation for a specific entity type.
+/// Use this to create entity-specific query services like TranslationsQueryService.
+/// </summary>
+public class QueryService<TEntity> : IQueryService<TEntity> where TEntity : class
 {
     private readonly IFilterHandlerRegistry _filterHandlerRegistry;
-    
+
     public QueryService(IFilterHandlerRegistry filterHandlerRegistry)
     {
         _filterHandlerRegistry = filterHandlerRegistry;
     }
+
     /// <summary>
     /// Applies ordering to a queryable if ordering parameters are specified
     /// </summary>
-    public IQueryable<T> ApplyOrdering<T>(IQueryable<T> query, OrderingParameters ordering)
+    public IQueryable<TEntity> ApplyOrdering(IQueryable<TEntity> query, OrderingParameters ordering)
     {
         if (ordering.HasOrdering())
         {
             query = query.OrderBy($"{ordering.OrderBy} {ordering.GetOrderDirection()}");
         }
-        
+
         return query;
     }
 
     /// <summary>
     /// Applies pagination (skip and take) to a queryable
     /// </summary>
-    public IQueryable<T> ApplyPagination<T>(IQueryable<T> query, PaginationParameters pagination)
+    public IQueryable<TEntity> ApplyPagination(IQueryable<TEntity> query, PaginationParameters pagination)
     {
         return query
             .Skip(pagination.Skip)
@@ -71,7 +86,7 @@ public class QueryService : IQueryService
     /// <summary>
     /// Executes a paginated query and returns a PaginatedList
     /// </summary>
-    public async Task<PaginatedList<TDto>> ToPaginatedListAsync<TEntity, TDto>(
+    public async Task<PaginatedList<TDto>> ToPaginatedListAsync<TDto>(
         IQueryable<TEntity> query,
         PaginationParameters pagination,
         Func<List<TEntity>, List<TDto>> mapper,
@@ -79,38 +94,38 @@ public class QueryService : IQueryService
     {
         // Get total count before pagination
         var totalItems = await query.CountAsync(cancellationToken);
-        
+
         // Apply pagination and fetch data
         var entities = await ApplyPagination(query, pagination)
             .ToListAsync(cancellationToken);
 
         // Map to DTOs
         var dtos = mapper(entities);
-        
+
         return new PaginatedList<TDto>(dtos, totalItems, pagination.PageNumber, pagination.PageSize);
     }
 
     /// <summary>
     /// Applies full-text search filter if specified
     /// </summary>
-    public IQueryable<T> ApplyTextSearch<T>(
-        IQueryable<T> query,
+    public IQueryable<TEntity> ApplyTextSearch(
+        IQueryable<TEntity> query,
         FilteringParameters filtering,
-        Func<string, IQueryable<T>, IQueryable<T>> searchPredicate)
+        Func<string, IQueryable<TEntity>, IQueryable<TEntity>> searchPredicate)
     {
         if (filtering.HasFilter())
         {
             var searchTerm = filtering.GetLowerSearchTerm();
             query = searchPredicate(searchTerm, query);
         }
-        
+
         return query;
     }
-    
+
     /// <summary>
     /// Applies a specification filter if search term is specified
     /// </summary>
-    public IQueryable<TEntity> ApplySpecification<TEntity>(
+    public IQueryable<TEntity> ApplySpecification(
         IQueryable<TEntity> query,
         FilteringParameters filtering,
         Func<string, IBasicSpecification<TEntity>> specificationFactory)
@@ -121,14 +136,14 @@ public class QueryService : IQueryService
             var specification = specificationFactory(searchTerm);
             query = query.Where(specification.ToExpression());
         }
-        
+
         return query;
     }
 
     /// <summary>
     /// Prepares a query by applying filters, search, includes, and ordering (but not pagination)
     /// </summary>
-    public async Task<IQueryable<TEntity>> PrepareQueryAsync<TEntity>(
+    public async Task<IQueryable<TEntity>> PrepareQueryAsync(
         IQueryable<TEntity> query,
         FilteringParameters filtering,
         OrderingParameters ordering,
@@ -191,11 +206,11 @@ public class QueryService : IQueryService
 
         return await Task.FromResult(query);
     }
-    
+
     /// <summary>
     /// Executes a prepared query and returns paginated results
     /// </summary>
-    public async Task<PaginatedList<TDto>> ExecutePaginatedQueryAsync<TEntity, TDto>(
+    public async Task<PaginatedList<TDto>> ExecutePaginatedQueryAsync<TDto>(
         IQueryable<TEntity> query,
         PaginationParameters pagination,
         Func<List<TEntity>, List<TDto>> mapper,

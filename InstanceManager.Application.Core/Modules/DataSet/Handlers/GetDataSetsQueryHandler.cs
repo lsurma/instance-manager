@@ -11,9 +11,9 @@ namespace InstanceManager.Application.Core.Modules.DataSet.Handlers;
 public class GetDataSetsQueryHandler : IRequestHandler<GetDataSetsQuery, PaginatedList<DataSetDto>>
 {
     private readonly InstanceManagerDbContext _context;
-    private readonly IQueryService _queryService;
+    private readonly IQueryService<DataSet> _queryService;
 
-    public GetDataSetsQueryHandler(InstanceManagerDbContext context, IQueryService queryService)
+    public GetDataSetsQueryHandler(InstanceManagerDbContext context, IQueryService<DataSet> queryService)
     {
         _context = context;
         _queryService = queryService;

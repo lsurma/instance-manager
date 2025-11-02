@@ -11,9 +11,9 @@ namespace InstanceManager.Application.Core.Modules.ProjectInstance.Handlers;
 public class GetProjectInstancesQueryHandler : IRequestHandler<GetProjectInstancesQuery, PaginatedList<ProjectInstanceDto>>
 {
     private readonly InstanceManagerDbContext _context;
-    private readonly IQueryService _queryService;
+    private readonly IQueryService<ProjectInstance> _queryService;
 
-    public GetProjectInstancesQueryHandler(InstanceManagerDbContext context, IQueryService queryService)
+    public GetProjectInstancesQueryHandler(InstanceManagerDbContext context, IQueryService<ProjectInstance> queryService)
     {
         _context = context;
         _queryService = queryService;

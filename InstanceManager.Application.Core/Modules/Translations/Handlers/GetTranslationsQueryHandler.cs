@@ -12,9 +12,9 @@ namespace InstanceManager.Application.Core.Modules.Translations.Handlers;
 public class GetTranslationsQueryHandler : IRequestHandler<GetTranslationsQuery, PaginatedList<TranslationDto>>
 {
     private readonly InstanceManagerDbContext _context;
-    private readonly IQueryService _queryService;
+    private readonly IQueryService<Translation> _queryService;
 
-    public GetTranslationsQueryHandler(InstanceManagerDbContext context, IQueryService queryService)
+    public GetTranslationsQueryHandler(InstanceManagerDbContext context, IQueryService<Translation> queryService)
     {
         _context = context;
         _queryService = queryService;
