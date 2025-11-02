@@ -31,7 +31,6 @@ public class SaveProjectInstanceCommandHandler : IRequestHandler<SaveProjectInst
             instance.MainHost = request.MainHost;
             instance.Notes = request.Notes;
             instance.ParentProjectId = request.ParentProjectId;
-            instance.UpdatedAt = DateTimeOffset.UtcNow;
         }
         else
         {
@@ -44,8 +43,7 @@ public class SaveProjectInstanceCommandHandler : IRequestHandler<SaveProjectInst
                 MainHost = request.MainHost,
                 Notes = request.Notes,
                 ParentProjectId = request.ParentProjectId,
-                CreatedAt = DateTimeOffset.UtcNow,
-                CreatedBy = "xx"
+                CreatedBy = string.Empty // Will be set by DbContext
             };
 
             _context.ProjectInstances.Add(instance);

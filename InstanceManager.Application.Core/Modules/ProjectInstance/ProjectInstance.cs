@@ -1,9 +1,9 @@
+using InstanceManager.Application.Core.Abstractions;
+
 namespace InstanceManager.Application.Core.Modules.ProjectInstance;
 
-public class ProjectInstance
+public class ProjectInstance : AuditableEntityBase
 {
-    public Guid Id { get; set; }
-
     public required string Name { get; set; }
 
     public string? Description { get; set; }
@@ -17,10 +17,4 @@ public class ProjectInstance
     public ProjectInstance? ParentProject { get; set; }
 
     public ICollection<ProjectInstance> ChildProjects { get; set; } = new List<ProjectInstance>();
-
-    public DateTimeOffset CreatedAt { get; set; }
-
-    public DateTimeOffset? UpdatedAt { get; set; }
-
-    public required string CreatedBy { get; set; }
 }

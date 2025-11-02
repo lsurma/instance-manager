@@ -35,7 +35,6 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
             translation.CultureName = request.CultureName;
             translation.Content = request.Content;
             translation.DataSetId = request.DataSetId;
-            translation.UpdatedAt = DateTimeOffset.UtcNow;
         }
         else
         {
@@ -49,8 +48,7 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
                 CultureName = request.CultureName,
                 Content = request.Content,
                 DataSetId = request.DataSetId,
-                CreatedAt = DateTimeOffset.UtcNow,
-                CreatedBy = "xx"
+                CreatedBy = string.Empty // Will be set by DbContext
             };
 
             _context.Translations.Add(translation);

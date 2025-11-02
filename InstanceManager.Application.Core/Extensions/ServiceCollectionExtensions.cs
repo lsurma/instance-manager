@@ -1,3 +1,4 @@
+using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,8 @@ public static class ServiceCollectionExtensions
             options.UseSqlite(connectionString));
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly));
+        
+        services.AddScoped<IQueryService, QueryService>();
 
         return services;
     }

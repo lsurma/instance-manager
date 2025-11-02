@@ -32,8 +32,7 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     private IList<TranslationDto> _selectedRows = new List<TranslationDto>();
     private GetTranslationsQuery _currentQuery = new GetTranslationsQuery
     {
-        PageNumber = 1,
-        PageSize = 15
+        Pagination = new PaginationParameters { PageNumber = 1, PageSize = 15 }
     };
     private string _cacheKey = "paginated_translations";
     private int _totalItems = 0;
@@ -51,11 +50,7 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     {
         try
         {
-            var result = await RequestSender.SendAsync<PaginatedList<DataSetDto>>(new GetDataSetsQuery
-            {
-                PageNumber = 1,
-                PageSize = int.MaxValue
-            });
+            var result = await RequestSender.SendAsync<PaginatedList<DataSetDto>>(GetDataSetsQuery.AllItems());
             AllDataSets = result.Items;
         }
         catch (Exception ex)
@@ -137,19 +132,17 @@ public partial class TranslationsPage : ComponentBase, IDisposable
         var skip = args.Skip ?? 0;
         var pageSize = args.Top ?? 20;
         
-        if (_currentQuery.OrderBy != orderBy || 
-            _currentQuery.OrderDirection != orderDirection ||
-            _currentQuery.Skip != skip ||
-            _currentQuery.PageSize != pageSize ||
-            _currentQuery.SearchTerm != _searchTerm)
+        if (_currentQuery.Ordering.OrderBy != orderBy || 
+            _currentQuery.Ordering.OrderDirection != orderDirection ||
+            _currentQuery.Pagination.Skip != skip ||
+            _currentQuery.Pagination.PageSize != pageSize ||
+            _currentQuery.Filtering.SearchTerm != _searchTerm)
         {
             _currentQuery = new GetTranslationsQuery
             {
-                SearchTerm = _searchTerm,
-                OrderBy = orderBy,
-                OrderDirection = orderDirection,
-                Skip = skip,
-                PageSize = pageSize
+                Filtering = new FilteringParameters { SearchTerm = _searchTerm },
+                Ordering = new OrderingParameters { OrderBy = orderBy, OrderDirection = orderDirection },
+                Pagination = new PaginationParameters { Skip = skip, PageSize = pageSize }
             };
             
             _cacheKey = string.IsNullOrWhiteSpace(_searchTerm) 
@@ -164,9 +157,8 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     {
         _currentQuery = new GetTranslationsQuery
         {
-            SearchTerm = _searchTerm,
-            Skip = 0,
-            PageSize = _pageSize
+            Filtering = new FilteringParameters { SearchTerm = _searchTerm },
+            Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
         };
         
         _cacheKey = string.IsNullOrWhiteSpace(_searchTerm) 

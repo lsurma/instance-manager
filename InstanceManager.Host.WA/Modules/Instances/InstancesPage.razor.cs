@@ -87,8 +87,7 @@ public partial class InstancesPage : ComponentBase, IDisposable
             // DataGrid uses pagination
             _currentQuery = new GetProjectInstancesQuery
             {
-                PageNumber = 1,
-                PageSize = 15
+                Pagination = new PaginationParameters { PageNumber = 1, PageSize = 15 }
             };
             _cacheKey = "paginated_project_instances";
         }
@@ -248,19 +247,17 @@ public partial class InstancesPage : ComponentBase, IDisposable
         var pageSize = args.Top ?? 20;
         
         // Update query if parameters changed
-        if (_currentQuery.OrderBy != orderBy || 
-            _currentQuery.OrderDirection != orderDirection ||
-            _currentQuery.Skip != skip ||
-            _currentQuery.PageSize != pageSize ||
-            _currentQuery.SearchTerm != _searchTerm)
+        if (_currentQuery.Ordering.OrderBy != orderBy || 
+            _currentQuery.Ordering.OrderDirection != orderDirection ||
+            _currentQuery.Pagination.Skip != skip ||
+            _currentQuery.Pagination.PageSize != pageSize ||
+            _currentQuery.Filtering.SearchTerm != _searchTerm)
         {
             _currentQuery = new GetProjectInstancesQuery
             {
-                SearchTerm = _searchTerm,
-                OrderBy = orderBy,
-                OrderDirection = orderDirection,
-                Skip = skip,
-                PageSize = pageSize
+                Filtering = new FilteringParameters { SearchTerm = _searchTerm },
+                Ordering = new OrderingParameters { OrderBy = orderBy, OrderDirection = orderDirection },
+                Pagination = new PaginationParameters { Skip = skip, PageSize = pageSize }
             };
             
             _cacheKey = string.IsNullOrWhiteSpace(_searchTerm) 
@@ -277,9 +274,8 @@ public partial class InstancesPage : ComponentBase, IDisposable
         // Reset to first page when search changes
         _currentQuery = new GetProjectInstancesQuery
         {
-            SearchTerm = _searchTerm,
-            Skip = 0,
-            PageSize = _pageSize
+            Filtering = new FilteringParameters { SearchTerm = _searchTerm },
+            Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
         };
         
         _cacheKey = string.IsNullOrWhiteSpace(_searchTerm) 

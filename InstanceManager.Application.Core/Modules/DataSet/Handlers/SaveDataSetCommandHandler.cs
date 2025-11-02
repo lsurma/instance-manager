@@ -33,7 +33,6 @@ public class SaveDataSetCommandHandler : IRequestHandler<SaveDataSetCommand, Gui
             dataSet.Name = request.Name;
             dataSet.Description = request.Description;
             dataSet.Notes = request.Notes;
-            dataSet.UpdatedAt = DateTimeOffset.UtcNow;
 
             // Update includes
             var existingIncludes = dataSet.Includes.ToList();
@@ -72,8 +71,7 @@ public class SaveDataSetCommandHandler : IRequestHandler<SaveDataSetCommand, Gui
                 Name = request.Name,
                 Description = request.Description,
                 Notes = request.Notes,
-                CreatedAt = DateTimeOffset.UtcNow,
-                CreatedBy = "xx"
+                CreatedBy = string.Empty // Will be set by DbContext
             };
 
             // Add includes

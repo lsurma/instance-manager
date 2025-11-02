@@ -1,7 +1,8 @@
-using System.Linq.Dynamic.Core;
 using InstanceManager.Application.Contracts.Common;
 using InstanceManager.Application.Contracts.Modules.DataSet;
+using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
+using InstanceManager.Application.Core.Modules.DataSet.Specifications;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,49 +11,32 @@ namespace InstanceManager.Application.Core.Modules.DataSet.Handlers;
 public class GetDataSetsQueryHandler : IRequestHandler<GetDataSetsQuery, PaginatedList<DataSetDto>>
 {
     private readonly InstanceManagerDbContext _context;
+    private readonly IQueryService _queryService;
 
-    public GetDataSetsQueryHandler(InstanceManagerDbContext context)
+    public GetDataSetsQueryHandler(InstanceManagerDbContext context, IQueryService queryService)
     {
         _context = context;
+        _queryService = queryService;
     }
 
     public async Task<PaginatedList<DataSetDto>> Handle(GetDataSetsQuery request, CancellationToken cancellationToken)
     {
         var query = _context.DataSets.AsNoTracking();
         
-        // Apply full-text search if specified
-        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-        {
-            var searchTerm = request.SearchTerm.ToLower();
-            query = query.Where(d => 
-                d.Name.ToLower().Contains(searchTerm) ||
-                (d.Description != null && d.Description.ToLower().Contains(searchTerm)) ||
-                (d.Notes != null && d.Notes.ToLower().Contains(searchTerm))
-            );
-        }
+        query = _queryService.PrepareQuery(
+            query,
+            request.Filtering,
+            request.Ordering,
+            new QueryOptions<DataSet>
+            {
+                SearchSpecificationFactory = searchTerm => new DataSetSearchSpecification(searchTerm),
+                IncludeFunc = q => q.Include(ds => ds.Includes)
+            });
         
-        // Apply ordering if specified
-        if (!string.IsNullOrEmpty(request.OrderBy))
-        {
-            var orderDirection = string.IsNullOrEmpty(request.OrderDirection) || request.OrderDirection.ToLower() == "asc" 
-                ? "ascending" 
-                : "descending";
-            
-            query = query.OrderBy($"{request.OrderBy} {orderDirection}");
-        }
-        
-        // Get total count before pagination
-        var totalItems = await query.CountAsync(cancellationToken);
-        
-        // Apply pagination using Skip property
-        var dataSets = await query
-            .Include(ds => ds.Includes)
-            .Skip(request.Skip)
-            .Take(request.PageSize)
-            .ToListAsync(cancellationToken);
-
-        var dtos = dataSets.ToDto();
-        
-        return new PaginatedList<DataSetDto>(dtos, totalItems, request.PageNumber, request.PageSize);
+        return await _queryService.ExecutePaginatedQueryAsync(
+            query,
+            request.Pagination,
+            dataSets => dataSets.ToDto(),
+            cancellationToken);
     }
 }

@@ -3,12 +3,10 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InstanceManager.Application.Core.Data.Configurations;
 
-public class ProjectInstanceConfiguration : IEntityTypeConfiguration<Modules.ProjectInstance.ProjectInstance>
+public class ProjectInstanceConfiguration : AuditableEntityConfiguration<Modules.ProjectInstance.ProjectInstance>
 {
-    public void Configure(EntityTypeBuilder<Modules.ProjectInstance.ProjectInstance> builder)
+    protected override void ConfigureEntity(EntityTypeBuilder<Modules.ProjectInstance.ProjectInstance> builder)
     {
-        builder.HasKey(e => e.Id);
-
         builder.Property(e => e.Name)
             .IsRequired()
             .HasMaxLength(200);
@@ -20,22 +18,6 @@ public class ProjectInstanceConfiguration : IEntityTypeConfiguration<Modules.Pro
             .HasMaxLength(500);
 
         builder.Property(e => e.Notes);
-
-        builder.Property(e => e.CreatedBy)
-            .IsRequired()
-            .HasMaxLength(100);
-        
-        // SQLite workaround: Store DateTimeOffset as UTC ticks for proper sorting/filtering
-        // This loses timezone information but ensures correct ordering in SQLite
-        builder.Property(e => e.CreatedAt)
-            .HasConversion(
-                v => v.UtcDateTime.Ticks,
-                v => new DateTimeOffset(v, TimeSpan.Zero));
-        
-        builder.Property(e => e.UpdatedAt)
-            .HasConversion(
-                v => v.HasValue ? v.Value.UtcDateTime.Ticks : (long?)null,
-                v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : (DateTimeOffset?)null);
 
         builder.HasOne(e => e.ParentProject)
             .WithMany(e => e.ChildProjects)

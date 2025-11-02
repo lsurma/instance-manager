@@ -1,9 +1,9 @@
+using InstanceManager.Application.Core.Abstractions;
+
 namespace InstanceManager.Application.Core.Modules.Translations;
 
-public class Translation
+public class Translation : AuditableEntityBase
 {
-    public Guid Id { get; set; }
-
     public required string InternalGroupName { get; set; }
 
     public required string ResourceName { get; set; }
@@ -17,10 +17,4 @@ public class Translation
     public Guid? DataSetId { get; set; }
 
     public DataSet.DataSet? DataSet { get; set; }
-
-    public DateTimeOffset CreatedAt { get; set; }
-
-    public DateTimeOffset? UpdatedAt { get; set; }
-
-    public required string CreatedBy { get; set; }
 }
