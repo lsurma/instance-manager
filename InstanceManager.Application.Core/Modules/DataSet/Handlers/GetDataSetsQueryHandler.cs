@@ -22,8 +22,8 @@ public class GetDataSetsQueryHandler : IRequestHandler<GetDataSetsQuery, Paginat
     public async Task<PaginatedList<DataSetDto>> Handle(GetDataSetsQuery request, CancellationToken cancellationToken)
     {
         var query = _context.DataSets.AsNoTracking();
-        
-        query = _queryService.PrepareQuery(
+
+        query = await _queryService.PrepareQueryAsync(
             query,
             request.Filtering,
             request.Ordering,
@@ -31,8 +31,9 @@ public class GetDataSetsQueryHandler : IRequestHandler<GetDataSetsQuery, Paginat
             {
                 SearchSpecificationFactory = searchTerm => new DataSetSearchSpecification(searchTerm),
                 IncludeFunc = q => q.Include(ds => ds.Includes)
-            });
-        
+            },
+            cancellationToken);
+
         return await _queryService.ExecutePaginatedQueryAsync(
             query,
             request.Pagination,

@@ -6,18 +6,20 @@ namespace InstanceManager.Application.Core.Modules.Translations.Filters;
 
 public class DataSetIdFilterHandler : IFilterHandler<Translation, DataSetIdFilter>
 {
-    public Expression<Func<Translation, bool>> GetFilterExpression(DataSetIdFilter filter)
+    public Task<Expression<Func<Translation, bool>>> GetFilterExpressionAsync(DataSetIdFilter filter, CancellationToken cancellationToken = default)
     {
         var dataSetId = filter.Value!.Value; // We know it has value because IsActive() was checked
-        return t => t.DataSetId == dataSetId;
+        Expression<Func<Translation, bool>> expression = t => t.DataSetId == dataSetId;
+        return Task.FromResult(expression);
     }
 }
 
 public class CultureNameFilterHandler : IFilterHandler<Translation, CultureNameFilter>
 {
-    public Expression<Func<Translation, bool>> GetFilterExpression(CultureNameFilter filter)
+    public Task<Expression<Func<Translation, bool>>> GetFilterExpressionAsync(CultureNameFilter filter, CancellationToken cancellationToken = default)
     {
         var cultureName = filter.Value!; // We know it has value because IsActive() was checked
-        return t => t.CultureName == cultureName;
+        Expression<Func<Translation, bool>> expression = t => t.CultureName == cultureName;
+        return Task.FromResult(expression);
     }
 }

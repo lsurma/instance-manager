@@ -23,16 +23,17 @@ public class GetTranslationsQueryHandler : IRequestHandler<GetTranslationsQuery,
     public async Task<PaginatedList<TranslationDto>> Handle(GetTranslationsQuery request, CancellationToken cancellationToken)
     {
         var query = _context.Translations.AsNoTracking();
-        
-        query = _queryService.PrepareQuery(
+
+        query = await _queryService.PrepareQueryAsync(
             query,
             request.Filtering,
             request.Ordering,
             new QueryOptions<Translation>
             {
                 SearchSpecificationFactory = searchTerm => new TranslationSearchSpecification(searchTerm)
-            });
-        
+            },
+            cancellationToken);
+
         return await _queryService.ExecutePaginatedQueryAsync(
             query,
             request.Pagination,

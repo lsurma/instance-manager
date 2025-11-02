@@ -22,16 +22,17 @@ public class GetProjectInstancesQueryHandler : IRequestHandler<GetProjectInstanc
     public async Task<PaginatedList<ProjectInstanceDto>> Handle(GetProjectInstancesQuery request, CancellationToken cancellationToken)
     {
         var query = _context.ProjectInstances.AsNoTracking();
-        
-        query = _queryService.PrepareQuery(
+
+        query = await _queryService.PrepareQueryAsync(
             query,
             request.Filtering,
             request.Ordering,
             new QueryOptions<ProjectInstance>
             {
                 SearchSpecificationFactory = searchTerm => new ProjectInstanceSearchSpecification(searchTerm)
-            });
-        
+            },
+            cancellationToken);
+
         return await _queryService.ExecutePaginatedQueryAsync(
             query,
             request.Pagination,

@@ -1,4 +1,5 @@
 using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using InstanceManager.Application.Contracts.Common;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,12 +23,13 @@ public interface IQueryService
         IQueryable<TEntity> query,
         FilteringParameters filtering,
         Func<string, IBasicSpecification<TEntity>> specificationFactory);
-    IQueryable<TEntity> PrepareQuery<TEntity>(
+    Task<IQueryable<TEntity>> PrepareQueryAsync<TEntity>(
         IQueryable<TEntity> query,
         FilteringParameters filtering,
         OrderingParameters ordering,
-        QueryOptions<TEntity>? options = null);
-    
+        QueryOptions<TEntity>? options = null,
+        CancellationToken cancellationToken = default);
+
     Task<PaginatedList<TDto>> ExecutePaginatedQueryAsync<TEntity, TDto>(
         IQueryable<TEntity> query,
         PaginationParameters pagination,
@@ -126,41 +128,44 @@ public class QueryService : IQueryService
     /// <summary>
     /// Prepares a query by applying filters, search, includes, and ordering (but not pagination)
     /// </summary>
-    public IQueryable<TEntity> PrepareQuery<TEntity>(
+    public async Task<IQueryable<TEntity>> PrepareQueryAsync<TEntity>(
         IQueryable<TEntity> query,
         FilteringParameters filtering,
         OrderingParameters ordering,
-        QueryOptions<TEntity>? options = null)
+        QueryOptions<TEntity>? options = null,
+        CancellationToken cancellationToken = default)
     {
         // Apply custom filters first (e.g., DataSetId, CultureName)
         if (filtering.HasQueryFilters())
         {
             var filterHandlers = _filterHandlerRegistry.GetHandlersForEntity<TEntity>();
-            
+
             foreach (var filter in filtering.QueryFilters.Where(f => f.IsActive()))
             {
                 var filterType = filter.GetType();
-                if (filterHandlers.TryGetValue(filterType, out var handler))
+                if (!filterHandlers.TryGetValue(filterType, out var handler))
                 {
-                    // Get the GetFilterExpression method via reflection
-                    var handlerType = handler.GetType();
-                    var method = handlerType.GetMethod("GetFilterExpression");
-                    if (method != null)
-                    {
-                        var expression = method.Invoke(handler, new object[] { filter });
-                        if (expression != null)
-                        {
-                            // Apply the expression to the query
-                            var whereMethod = typeof(Queryable).GetMethods()
-                                .First(m => m.Name == "Where" && m.GetParameters().Length == 2)
-                                .MakeGenericMethod(typeof(TEntity));
-                            query = (IQueryable<TEntity>)whereMethod.Invoke(null, new[] { query, expression })!;
-                        }
-                    }
+                    continue;
+                }
+
+                // Get the GetFilterExpressionAsync method via reflection
+                var handlerType = handler.GetType();
+                var method = handlerType.GetMethod("GetFilterExpressionAsync");
+                if (method == null)
+                {
+                    continue;
+                }
+
+                // Invoke the async method
+                var task = method.Invoke(handler, new object[] { filter, cancellationToken });
+                if (task is Task<Expression<Func<TEntity, bool>>> expressionTask)
+                {
+                    var expression = await expressionTask;
+                    query = query.Where(expression);
                 }
             }
         }
-        
+
         if (options != null)
         {
             // Apply search predicate if provided
@@ -173,18 +178,18 @@ public class QueryService : IQueryService
             {
                 query = ApplySpecification(query, filtering, options.SearchSpecificationFactory);
             }
-            
+
             // Apply includes if provided
             if (options.IncludeFunc != null)
             {
                 query = options.IncludeFunc(query);
             }
         }
-        
+
         // Apply ordering
         query = ApplyOrdering(query, ordering);
-        
-        return query;
+
+        return await Task.FromResult(query);
     }
     
     /// <summary>

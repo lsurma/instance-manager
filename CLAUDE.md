@@ -53,6 +53,7 @@ The application has a sophisticated pagination/filtering system built around the
   - Auto-registers all `IFilterHandler<TEntity, TFilter>` implementations via reflection
   - Allows custom filters per entity (e.g., `TranslationFilterApplicator` for culture/dataset filtering)
   - Filters are applied via `FilteringParameters.QueryFilters` using expressions
+  - Filter handlers support async operations via `GetFilterExpressionAsync()` for filters that require database lookups or other async operations
 
 - **`QueryOptions<TEntity>`**: Configuration for query preparation
   - `SearchPredicate`: Func for full-text search across properties
@@ -112,7 +113,9 @@ Note: Migrations are automatically applied on API startup via `InitializeDatabas
    - For queries with filtering, define filter classes implementing `IQueryFilter`
 
 **2. Register Filter Handlers** (if using custom filters) in `InstanceManager.Application.Core/Modules/{ModuleName}/Filters/`:
-   - Implement `IFilterHandler<TEntity, TFilter>` with `GetFilterExpression()` method
+   - Implement `IFilterHandler<TEntity, TFilter>` with `GetFilterExpressionAsync()` method
+   - Method signature: `Task<Expression<Func<TEntity, bool>>> GetFilterExpressionAsync(TFilter filter, CancellationToken cancellationToken = default)`
+   - For simple synchronous filters, return `Task.FromResult(expression)`
    - Handlers are auto-registered via reflection in `ServiceCollectionExtensions.RegisterFilterHandlers()`
 
 **3. Implement Handler** in `InstanceManager.Application.Core/Modules/{ModuleName}/Handlers/`:
