@@ -1,0 +1,73 @@
+@page "/translations"
+@using InstanceManager.Application.Contracts.Common
+@using InstanceManager.Application.Contracts.Modules.Translations
+@using Radzen
+@using Radzen.Blazor
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+    <h3 style="margin: 0;">Translations</h3>
+    
+    <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
+        <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Add())" />
+    </FluentNavLink>
+</FluentStack>
+
+<FluentDivider Style="margin: 16px 0;" />
+
+<DataLoader TResponse="PaginatedList<TranslationDto>"
+            TQuery="GetTranslationsQuery"
+            Query="@_currentQuery"
+            CacheKey="@_cacheKey"
+            RefreshToken="@_refreshToken"
+            OnDataFetched="HandleDataFetched">
+    <ChildContent Context="result">
+        <FluentStack Orientation="Orientation.Horizontal" Style="margin-bottom: 16px;" VerticalAlignment="VerticalAlignment.Center">
+            <FluentSearch Placeholder="Search translations..."
+                         @bind-Value="@_searchTerm"
+                         @bind-Value:after="OnSearchChanged"
+                         Style="width: 300px;" />
+            @if (!string.IsNullOrWhiteSpace(_searchTerm))
+            {
+                <FluentButton Appearance="Appearance.Lightweight"
+                              IconStart="@(new Icons.Regular.Size20.Dismiss())"
+                              OnClick="ClearSearch">
+                    Clear
+                </FluentButton>
+            }
+        </FluentStack>
+        
+        <RadzenDataGrid Data="@AllTranslations"
+                        LoadData="@OnLoadData"
+                        Count="@_totalItems"
+                        TItem="TranslationDto" 
+                        AllowFiltering="true" 
+                        AllowSorting="true" 
+                        AllowPaging="true" 
+                        PageSize="@_pageSize"
+                        FilterPopupRenderMode="PopupRenderMode.OnDemand"
+                        SelectionMode="DataGridSelectionMode.Single"
+                        Value="@_selectedRows"
+                        ValueChanged="@OnDataGridSelectionChanged">
+            <Columns>
+                <RadzenDataGridColumn TItem="TranslationDto" Property="InternalGroupName" Title="Group" Width="120px" />
+                <RadzenDataGridColumn TItem="TranslationDto" Property="ResourceName" Title="Resource" Width="150px" />
+                <RadzenDataGridColumn TItem="TranslationDto" Property="TranslationName" Title="Key" Width="150px" />
+                <RadzenDataGridColumn TItem="TranslationDto" Property="CultureName" Title="Culture" Width="80px" />
+                <RadzenDataGridColumn TItem="TranslationDto" Property="Content" Title="Content">
+                    <Template Context="translation">
+                        @if (translation.Content.Length > 100)
+                        {
+                            <text>@translation.Content.Substring(0, 100)...</text>
+                        }
+                        else
+                        {
+                            <text>@translation.Content</text>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="TranslationDto" Property="CreatedAt" Title="Created At" FormatString="{0:yyyy-MM-dd HH:mm}" Width="150px" />
+            </Columns>
+        </RadzenDataGrid>
+    </ChildContent>
+</DataLoader>

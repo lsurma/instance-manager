@@ -12,6 +12,8 @@ public class InstanceManagerDbContext : DbContext
 
     public DbSet<Modules.DataSet.DataSet> DataSets { get; set; }
 
+    public DbSet<Modules.Translations.Translation> Translations { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

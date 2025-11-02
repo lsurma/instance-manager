@@ -1,0 +1,101 @@
+@using InstanceManager.Application.Contracts.Modules.Translations
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@implements IDialogContentComponent<TranslationPanelParameters>
+
+<FluentKeyCode Only="@([KeyCode.Ctrl, KeyCode.KeyS])" OnKeyDown="@HandleKeyDownAsync">
+<FluentDialogBody>
+    <EditForm Model="Content.Translation" OnSubmit="@(() => HandleSubmitAsync(false))">
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+            
+            <FluentTextField @bind-Value="Content.Translation.InternalGroupName"
+                             Label="Internal Group Name"
+                             Immediate="true"
+                             Required
+                             Style="width: 100%;" />
+            
+            <FluentTextField @bind-Value="Content.Translation.ResourceName"
+                             Label="Resource Name"
+                             Immediate="true"
+                             Required
+                             Style="width: 100%;" />
+            
+            <FluentTextField @bind-Value="Content.Translation.TranslationName"
+                             Label="Translation Key"
+                             Immediate="true"
+                             Required
+                             Style="width: 100%;" />
+            
+            <FluentTextField @bind-Value="Content.Translation.CultureName"
+                             Label="Culture Name"
+                             Immediate="true"
+                             Required
+                             Placeholder="e.g., en-US, pl-PL"
+                             Style="width: 100%;" />
+            
+            <FluentTextArea @bind-Value="Content.Translation.Content"
+                            Label="Content"
+                            Immediate="true"
+                            Required
+                            Rows="6"
+                            Style="width: 100%;" />
+            
+            @if (Content.AvailableDataSets.Any())
+            {
+                <FluentSelect Value="@(Content.Translation.DataSetId?.ToString() ?? string.Empty)"
+                              ValueChanged="@((val) => Content.Translation.DataSetId = String.IsNullOrWhiteSpace(val) ? null : Guid.Parse(val))"
+                              Label="Data Set (Optional)"
+                              Items="DataSetSelectItems"
+                              OptionValue="@(opt => opt.Value?.ToString() ?? string.Empty)"
+                              Style="width: 100%;">
+                    <OptionTemplate Context="optionTemplateContext">
+                        @optionTemplateContext.Text
+                    </OptionTemplate>
+                </FluentSelect>
+            }
+            
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <FluentMessageBar Intent="MessageIntent.Error">
+                    @ErrorMessage
+                </FluentMessageBar>
+            }
+            
+        </FluentStack>
+    </EditForm>
+</FluentDialogBody>
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Accent" 
+                      IconStart="@(Content.IsEditMode ? new Icons.Regular.Size20.Save() : new Icons.Regular.Size20.Add())"
+                      OnClick="@(() => HandleSubmitAsync(closeAfterSave: false))" 
+                      Loading="IsSaving">
+            @(Content.IsEditMode ? "Update" : "Create")
+        </FluentButton>
+        
+        <FluentButton Appearance="Appearance.Neutral" 
+                      IconStart="@(Content.IsEditMode ? new Icons.Regular.Size20.CheckmarkCircle() : new Icons.Regular.Size20.AddCircle())"
+                      OnClick="@(() => HandleSubmitAsync(closeAfterSave: true))" 
+                      Loading="IsSaving">
+            @(Content.IsEditMode ? "Update" : "Create") and Close
+        </FluentButton>
+        
+        <FluentButton Appearance="Appearance.Neutral" 
+                      IconStart="@(new Icons.Regular.Size20.Dismiss())"
+                      OnClick="HandleCancelAsync">
+            Cancel
+        </FluentButton>
+    
+    @if (Content.IsEditMode)
+    {
+        <FluentSpacer />
+        <FluentButton Appearance="Appearance.Accent" 
+                      BackgroundColor="var(--error)"
+                      IconStart="@(new Icons.Regular.Size20.Delete())"
+                      OnClick="HandleDeleteClickAsync"
+                      Disabled="IsSaving"
+                      Loading="IsDeleting">
+            Delete
+        </FluentButton>
+    }
+</FluentDialogFooter>
+</FluentKeyCode>
