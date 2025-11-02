@@ -1,10 +1,12 @@
 namespace InstanceManager.Application.Core.Common;
 
+/// <summary>
+/// Options for configuring query preparation
+/// </summary>
 public class QueryOptions<TEntity>
 {
-    public Func<string, IQueryable<TEntity>, IQueryable<TEntity>>? SearchPredicate { get; set; }
-    
-    public Func<string, IBasicSpecification<TEntity>>? SearchSpecificationFactory { get; set; }
-    
+    /// <summary>
+    /// Function to apply EF Core Include() chains for eager loading
+    /// </summary>
     public Func<IQueryable<TEntity>, IQueryable<TEntity>>? IncludeFunc { get; set; }
 }

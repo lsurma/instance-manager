@@ -34,7 +34,10 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     {
         Pagination = new PaginationParameters { PageNumber = 1, PageSize = 15 }
     };
+    
+    // Should stay static - we dont wanna cache all different queries separately
     private string _cacheKey = "paginated_translations";
+    
     private int _totalItems = 0;
     private int _pageSize = 20;
     private string? _searchTerm;
@@ -133,10 +136,10 @@ public partial class TranslationsPage : ComponentBase, IDisposable
         var skip = args.Skip ?? 0;
         var pageSize = args.Top ?? 20;
         
-        var hasFiltersChanged = _currentQuery.Filtering.SearchTerm != _searchTerm ||
+        var hasFiltersChanged = GetCurrentSearchTerm() != _searchTerm ||
                                 !HasSameCultureFilter(_currentQuery.Filtering.QueryFilters);
-        
-        if (_currentQuery.Ordering.OrderBy != orderBy || 
+
+        if (_currentQuery.Ordering.OrderBy != orderBy ||
             _currentQuery.Ordering.OrderDirection != orderDirection ||
             _currentQuery.Pagination.Skip != skip ||
             _currentQuery.Pagination.PageSize != pageSize ||
@@ -144,65 +147,68 @@ public partial class TranslationsPage : ComponentBase, IDisposable
         {
             _currentQuery = new GetTranslationsQuery
             {
-                Filtering = new FilteringParameters 
-                { 
-                    SearchTerm = _searchTerm,
+                Filtering = new FilteringParameters
+                {
                     QueryFilters = BuildQueryFilters()
                 },
                 Ordering = new OrderingParameters { OrderBy = orderBy, OrderDirection = orderDirection },
                 Pagination = new PaginationParameters { Skip = skip, PageSize = pageSize }
             };
-            
-            _cacheKey = string.IsNullOrWhiteSpace(_searchTerm) 
-                ? "paginated_translations" 
-                : $"search_{_searchTerm}_translations_paginated";
-            
+
             _refreshToken = Guid.NewGuid().ToString();
         }
     }
-    
+
     private void OnSearchChanged()
     {
         _currentQuery = new GetTranslationsQuery
         {
-            Filtering = new FilteringParameters 
-            { 
-                SearchTerm = _searchTerm,
+            Filtering = new FilteringParameters
+            {
                 QueryFilters = BuildQueryFilters()
             },
             Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
         };
-        
-        UpdateCacheKey();
+
         _refreshToken = Guid.NewGuid().ToString();
     }
-    
+
     private void OnCultureFilterChanged()
     {
         _currentQuery = new GetTranslationsQuery
         {
-            Filtering = new FilteringParameters 
-            { 
-                SearchTerm = _searchTerm,
+            Filtering = new FilteringParameters
+            {
                 QueryFilters = BuildQueryFilters()
             },
             Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
         };
-        
-        UpdateCacheKey();
+
         _refreshToken = Guid.NewGuid().ToString();
     }
-    
+
     private List<IQueryFilter> BuildQueryFilters()
     {
         var filters = new List<IQueryFilter>();
-        
+
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            filters.Add(new SearchFilter { SearchTerm = _searchTerm });
+        }
+
         if (!string.IsNullOrWhiteSpace(_cultureNameFilter))
         {
             filters.Add(new CultureNameFilter { Value = _cultureNameFilter });
         }
-        
+
         return filters;
+    }
+
+    private string? GetCurrentSearchTerm()
+    {
+        return _currentQuery.Filtering.QueryFilters
+            .OfType<SearchFilter>()
+            .FirstOrDefault()?.SearchTerm;
     }
     
     private bool HasSameCultureFilter(List<IQueryFilter> filters)
@@ -217,23 +223,6 @@ public partial class TranslationsPage : ComponentBase, IDisposable
         return existingCultureFilter?.Value == _cultureNameFilter;
     }
     
-    private void UpdateCacheKey()
-    {
-        var keyParts = new List<string> { "translations" };
-        
-        if (!string.IsNullOrWhiteSpace(_searchTerm))
-        {
-            keyParts.Add($"search_{_searchTerm}");
-        }
-        
-        if (!string.IsNullOrWhiteSpace(_cultureNameFilter))
-        {
-            keyParts.Add($"culture_{_cultureNameFilter}");
-        }
-        
-        keyParts.Add("paginated");
-        _cacheKey = string.Join("_", keyParts);
-    }
     
     private void ClearSearch()
     {

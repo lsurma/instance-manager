@@ -24,15 +24,6 @@ public interface IQueryService<TEntity> : IQueryService where TEntity : class
         PaginationParameters pagination,
         Func<List<TEntity>, List<TDto>> mapper,
         CancellationToken cancellationToken = default);
-    IQueryable<TEntity> ApplyTextSearch(
-        IQueryable<TEntity> query,
-        FilteringParameters filtering,
-        Func<string, IQueryable<TEntity>, IQueryable<TEntity>> searchPredicate);
-
-    IQueryable<TEntity> ApplySpecification(
-        IQueryable<TEntity> query,
-        FilteringParameters filtering,
-        Func<string, IBasicSpecification<TEntity>> specificationFactory);
     Task<IQueryable<TEntity>> PrepareQueryAsync(
         IQueryable<TEntity> query,
         FilteringParameters filtering,
@@ -106,42 +97,7 @@ public class QueryService<TEntity> : IQueryService<TEntity> where TEntity : clas
     }
 
     /// <summary>
-    /// Applies full-text search filter if specified
-    /// </summary>
-    public IQueryable<TEntity> ApplyTextSearch(
-        IQueryable<TEntity> query,
-        FilteringParameters filtering,
-        Func<string, IQueryable<TEntity>, IQueryable<TEntity>> searchPredicate)
-    {
-        if (filtering.HasFilter())
-        {
-            var searchTerm = filtering.GetLowerSearchTerm();
-            query = searchPredicate(searchTerm, query);
-        }
-
-        return query;
-    }
-
-    /// <summary>
-    /// Applies a specification filter if search term is specified
-    /// </summary>
-    public IQueryable<TEntity> ApplySpecification(
-        IQueryable<TEntity> query,
-        FilteringParameters filtering,
-        Func<string, IBasicSpecification<TEntity>> specificationFactory)
-    {
-        if (filtering.HasFilter())
-        {
-            var searchTerm = filtering.GetLowerSearchTerm();
-            var specification = specificationFactory(searchTerm);
-            query = query.Where(specification.ToExpression());
-        }
-
-        return query;
-    }
-
-    /// <summary>
-    /// Prepares a query by applying filters, search, includes, and ordering (but not pagination)
+    /// Prepares a query by applying filters, includes, and ordering (but not pagination)
     /// </summary>
     public async Task<IQueryable<TEntity>> PrepareQueryAsync(
         IQueryable<TEntity> query,
@@ -150,7 +106,7 @@ public class QueryService<TEntity> : IQueryService<TEntity> where TEntity : clas
         QueryOptions<TEntity>? options = null,
         CancellationToken cancellationToken = default)
     {
-        // Apply custom filters first (e.g., DataSetId, CultureName)
+        // Apply filters
         if (filtering.HasQueryFilters())
         {
             var filterHandlers = _filterHandlerRegistry.GetHandlersForEntity<TEntity>();
@@ -183,17 +139,6 @@ public class QueryService<TEntity> : IQueryService<TEntity> where TEntity : clas
 
         if (options != null)
         {
-            // Apply search predicate if provided
-            if (options.SearchPredicate != null)
-            {
-                query = ApplyTextSearch(query, filtering, options.SearchPredicate);
-            }
-            // Otherwise apply specification if provided
-            else if (options.SearchSpecificationFactory != null)
-            {
-                query = ApplySpecification(query, filtering, options.SearchSpecificationFactory);
-            }
-
             // Apply includes if provided
             if (options.IncludeFunc != null)
             {

@@ -2,7 +2,6 @@ using InstanceManager.Application.Contracts.Common;
 using InstanceManager.Application.Contracts.Modules.ProjectInstance;
 using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
-using InstanceManager.Application.Core.Modules.ProjectInstance.Specifications;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,11 +26,7 @@ public class GetProjectInstancesQueryHandler : IRequestHandler<GetProjectInstanc
             query,
             request.Filtering,
             request.Ordering,
-            new QueryOptions<ProjectInstance>
-            {
-                SearchSpecificationFactory = searchTerm => new ProjectInstanceSearchSpecification(searchTerm)
-            },
-            cancellationToken);
+            cancellationToken: cancellationToken);
 
         return await _queryService.ExecutePaginatedQueryAsync(
             query,

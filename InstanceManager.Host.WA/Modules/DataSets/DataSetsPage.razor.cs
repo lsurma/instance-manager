@@ -29,7 +29,10 @@ public partial class DataSetsPage : ComponentBase, IDisposable
     {
         Pagination = new PaginationParameters { PageNumber = 1, PageSize = 15 }
     };
+
+    // Should stay static - we dont wanna cache all different queries separately
     private string _cacheKey = "paginated_datasets";
+
     private int _totalItems = 0;
     private int _pageSize = 20;
     private string? _searchTerm;
@@ -102,51 +105,62 @@ public partial class DataSetsPage : ComponentBase, IDisposable
     {
         string? orderBy = null;
         string? orderDirection = null;
-        
+
         if (!string.IsNullOrEmpty(args.OrderBy))
         {
             var orderByParts = args.OrderBy.Split(' ');
             orderBy = orderByParts[0];
             orderDirection = orderByParts.Length > 1 && orderByParts[1].ToLower() == "desc" ? "desc" : "asc";
         }
-        
+
         var skip = args.Skip ?? 0;
         var pageSize = args.Top ?? 20;
-        
-        if (_currentQuery.Ordering.OrderBy != orderBy || 
+
+        if (_currentQuery.Ordering.OrderBy != orderBy ||
             _currentQuery.Ordering.OrderDirection != orderDirection ||
             _currentQuery.Pagination.Skip != skip ||
             _currentQuery.Pagination.PageSize != pageSize ||
-            _currentQuery.Filtering.SearchTerm != _searchTerm)
+            GetCurrentSearchTerm() != _searchTerm)
         {
             _currentQuery = new GetDataSetsQuery
             {
-                Filtering = new FilteringParameters { SearchTerm = _searchTerm },
+                Filtering = BuildFilteringParameters(),
                 Ordering = new OrderingParameters { OrderBy = orderBy, OrderDirection = orderDirection },
                 Pagination = new PaginationParameters { Skip = skip, PageSize = pageSize }
             };
-            
-            _cacheKey = string.IsNullOrWhiteSpace(_searchTerm) 
-                ? "paginated_datasets" 
-                : $"search_{_searchTerm}_datasets_paginated";
-            
+
             _refreshToken = Guid.NewGuid().ToString();
         }
     }
-    
+
     private void OnSearchChanged()
     {
         _currentQuery = new GetDataSetsQuery
         {
-            Filtering = new FilteringParameters { SearchTerm = _searchTerm },
+            Filtering = BuildFilteringParameters(),
             Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
         };
-        
-        _cacheKey = string.IsNullOrWhiteSpace(_searchTerm) 
-            ? "paginated_datasets" 
-            : $"search_{_searchTerm}_datasets_paginated";
-        
+
         _refreshToken = Guid.NewGuid().ToString();
+    }
+
+    private FilteringParameters BuildFilteringParameters()
+    {
+        var filters = new List<IQueryFilter>();
+
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            filters.Add(new SearchFilter { SearchTerm = _searchTerm });
+        }
+
+        return new FilteringParameters { QueryFilters = filters };
+    }
+
+    private string? GetCurrentSearchTerm()
+    {
+        return _currentQuery.Filtering.QueryFilters
+            .OfType<SearchFilter>()
+            .FirstOrDefault()?.SearchTerm;
     }
     
     private void ClearSearch()

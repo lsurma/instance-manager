@@ -2,8 +2,6 @@ using InstanceManager.Application.Contracts.Common;
 using InstanceManager.Application.Contracts.Modules.Translations;
 using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
-using InstanceManager.Application.Core.Modules.Translations.Filters;
-using InstanceManager.Application.Core.Modules.Translations.Specifications;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,11 +26,7 @@ public class GetTranslationsQueryHandler : IRequestHandler<GetTranslationsQuery,
             query,
             request.Filtering,
             request.Ordering,
-            new QueryOptions<Translation>
-            {
-                SearchSpecificationFactory = searchTerm => new TranslationSearchSpecification(searchTerm)
-            },
-            cancellationToken);
+            cancellationToken: cancellationToken);
 
         return await _queryService.ExecutePaginatedQueryAsync(
             query,

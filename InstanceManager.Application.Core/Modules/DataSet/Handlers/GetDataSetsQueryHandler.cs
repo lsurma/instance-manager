@@ -2,7 +2,6 @@ using InstanceManager.Application.Contracts.Common;
 using InstanceManager.Application.Contracts.Modules.DataSet;
 using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
-using InstanceManager.Application.Core.Modules.DataSet.Specifications;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,7 +28,6 @@ public class GetDataSetsQueryHandler : IRequestHandler<GetDataSetsQuery, Paginat
             request.Ordering,
             new QueryOptions<DataSet>
             {
-                SearchSpecificationFactory = searchTerm => new DataSetSearchSpecification(searchTerm),
                 IncludeFunc = q => q.Include(ds => ds.Includes)
             },
             cancellationToken);

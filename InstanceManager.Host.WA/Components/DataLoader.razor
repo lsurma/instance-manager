@@ -83,7 +83,7 @@ else if (Data != null)
     private bool IsLoading { get; set; } = true;
     private string? ErrorMessage { get; set; }
     private string? _previousRefreshToken;
-    private bool _isFirstCachedFetch = true;
+    private bool _hasLoadedOnce = false;
     private bool _isFirstLiveFetch = true;
 
     protected override async Task OnInitializedAsync()
@@ -91,7 +91,7 @@ else if (Data != null)
         _previousRefreshToken = RefreshToken;
         await LoadDataAsync();
     }
-    
+
     protected override async Task OnParametersSetAsync()
     {
         // Refresh data when RefreshToken changes
@@ -112,8 +112,8 @@ else if (Data != null)
             var cacheKey = CacheKey ?? $"query_{Query!.GetType().Name}";
             var shouldUseCache = ShouldCache == null || await ShouldCache(Query);
 
-            // Try to load from cache first if caching is enabled
-            if (shouldUseCache)
+            // Try to load from cache ONLY on the very first load for this component instance
+            if (shouldUseCache && !_hasLoadedOnce)
             {
                 var cachedData = await LocalStorage.GetItemAsync<TResponse>(cacheKey);
                 if (cachedData != null)
@@ -127,15 +127,17 @@ else if (Data != null)
                         var eventArgs = new DataFetchedEventArgs<TResponse>(
                             cachedData,
                             IsFromCache: true,
-                            IsFirstFetch: _isFirstCachedFetch
+                            IsFirstFetch: true
                         );
-                        _isFirstCachedFetch = false;
                         await OnDataFetched.InvokeAsync(eventArgs);
                     }
 
                     StateHasChanged();
                 }
             }
+
+            // Mark that we've attempted to load at least once
+            _hasLoadedOnce = true;
 
             // Fetch fresh data from API
             var freshData = await RequestSender.SendAsync<TResponse>(Query);

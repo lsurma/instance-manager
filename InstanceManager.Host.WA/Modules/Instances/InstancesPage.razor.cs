@@ -29,7 +29,10 @@ public partial class InstancesPage : ComponentBase, IDisposable
     private RenderMode _renderMode = RenderMode.WebAwesomeTree;
     private IList<ProjectInstanceDto> _selectedRows = new List<ProjectInstanceDto>();
     private GetProjectInstancesQuery _currentQuery = GetProjectInstancesQuery.AllItems();
+
+    // Should stay static - we dont wanna cache all different queries separately
     private string _cacheKey = "all_project_instances";
+
     private int _totalItems = 0;
     private int _pageSize = 20;
     private string? _searchTerm;
@@ -247,42 +250,53 @@ public partial class InstancesPage : ComponentBase, IDisposable
         var pageSize = args.Top ?? 20;
         
         // Update query if parameters changed
-        if (_currentQuery.Ordering.OrderBy != orderBy || 
+        if (_currentQuery.Ordering.OrderBy != orderBy ||
             _currentQuery.Ordering.OrderDirection != orderDirection ||
             _currentQuery.Pagination.Skip != skip ||
             _currentQuery.Pagination.PageSize != pageSize ||
-            _currentQuery.Filtering.SearchTerm != _searchTerm)
+            GetCurrentSearchTerm() != _searchTerm)
         {
             _currentQuery = new GetProjectInstancesQuery
             {
-                Filtering = new FilteringParameters { SearchTerm = _searchTerm },
+                Filtering = BuildFilteringParameters(),
                 Ordering = new OrderingParameters { OrderBy = orderBy, OrderDirection = orderDirection },
                 Pagination = new PaginationParameters { Skip = skip, PageSize = pageSize }
             };
-            
-            _cacheKey = string.IsNullOrWhiteSpace(_searchTerm) 
-                ? "paginated_project_instances" 
-                : $"search_{_searchTerm}_paginated";
-            
+
             // Trigger data refresh
             _refreshToken = Guid.NewGuid().ToString();
         }
     }
-    
+
     private void OnSearchChanged()
     {
         // Reset to first page when search changes
         _currentQuery = new GetProjectInstancesQuery
         {
-            Filtering = new FilteringParameters { SearchTerm = _searchTerm },
+            Filtering = BuildFilteringParameters(),
             Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
         };
-        
-        _cacheKey = string.IsNullOrWhiteSpace(_searchTerm) 
-            ? "paginated_project_instances" 
-            : $"search_{_searchTerm}_paginated";
-        
+
         _refreshToken = Guid.NewGuid().ToString();
+    }
+
+    private FilteringParameters BuildFilteringParameters()
+    {
+        var filters = new List<IQueryFilter>();
+
+        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            filters.Add(new SearchFilter { SearchTerm = _searchTerm });
+        }
+
+        return new FilteringParameters { QueryFilters = filters };
+    }
+
+    private string? GetCurrentSearchTerm()
+    {
+        return _currentQuery.Filtering.QueryFilters
+            .OfType<SearchFilter>()
+            .FirstOrDefault()?.SearchTerm;
     }
     
     private void ClearSearch()
