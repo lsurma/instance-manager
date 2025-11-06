@@ -1,6 +1,16 @@
 namespace InstanceManager.Application.Core.Abstractions;
 
-public interface IEntity
+/// <summary>
+/// Base interface for entities with a generic primary key type
+/// </summary>
+public interface IEntity<TPrimaryKey> where TPrimaryKey : notnull
 {
-    Guid Id { get; set; }
+    TPrimaryKey Id { get; set; }
+}
+
+/// <summary>
+/// Base interface for entities with Guid primary key (backward compatibility)
+/// </summary>
+public interface IEntity : IEntity<Guid>
+{
 }

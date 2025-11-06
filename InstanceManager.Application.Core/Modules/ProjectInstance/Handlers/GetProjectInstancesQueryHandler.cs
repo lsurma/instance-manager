@@ -22,11 +22,14 @@ public class GetProjectInstancesQueryHandler : IRequestHandler<GetProjectInstanc
     {
         var query = _context.ProjectInstances.AsNoTracking();
 
-        query = await _queryService.PrepareQueryAsync(
-            query,
-            request.Filtering,
-            request.Ordering,
-            cancellationToken: cancellationToken);
+        // Prepare query options
+        var options = new QueryOptions<ProjectInstance>
+        {
+            Filtering = request.Filtering,
+            Ordering = request.Ordering
+        };
+
+        query = await _queryService.PrepareQueryAsync(query, options, cancellationToken);
 
         return await _queryService.ExecutePaginatedQueryAsync(
             query,

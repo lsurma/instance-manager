@@ -22,12 +22,15 @@ public class GetTranslationsQueryHandler : IRequestHandler<GetTranslationsQuery,
     {
         var query = _context.Translations.AsNoTracking();
 
+        // Prepare query options
+        var options = new QueryOptions<Translation>
+        {
+            Filtering = request.Filtering,
+            Ordering = request.Ordering
+        };
+
         // Query service automatically applies authorization pre-filtering
-        query = await _queryService.PrepareQueryAsync(
-            query,
-            request.Filtering,
-            request.Ordering,
-            cancellationToken: cancellationToken);
+        query = await _queryService.PrepareQueryAsync(query, options, cancellationToken);
 
         return await _queryService.ExecutePaginatedQueryAsync(
             query,

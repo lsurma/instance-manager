@@ -7,19 +7,26 @@ namespace InstanceManager.Application.Core.Modules.Translations.Handlers;
 public class DeleteTranslationCommandHandler : IRequestHandler<DeleteTranslationCommand, bool>
 {
     private readonly InstanceManagerDbContext _context;
+    private readonly TranslationsQueryService _queryService;
 
-    public DeleteTranslationCommandHandler(InstanceManagerDbContext context)
+    public DeleteTranslationCommandHandler(InstanceManagerDbContext context, TranslationsQueryService queryService)
     {
         _context = context;
+        _queryService = queryService;
     }
 
     public async Task<bool> Handle(DeleteTranslationCommand request, CancellationToken cancellationToken)
     {
-        var translation = await _context.Translations.FindAsync([request.Id], cancellationToken);
+        // GetByIdAsync applies authorization automatically via TranslationsQueryService
+        var translation = await _queryService.GetByIdAsync(
+            _context.Translations.AsQueryable(),
+            request.Id,
+            options: null,
+            cancellationToken);
 
         if (translation == null)
         {
-            return false;
+            return false; // Not found or no access
         }
 
         _context.Translations.Remove(translation);

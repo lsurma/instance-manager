@@ -22,15 +22,15 @@ public class GetDataSetsQueryHandler : IRequestHandler<GetDataSetsQuery, Paginat
     {
         var query = _context.DataSets.AsNoTracking();
 
-        query = await _queryService.PrepareQueryAsync(
-            query,
-            request.Filtering,
-            request.Ordering,
-            new QueryOptions<DataSet>
-            {
-                IncludeFunc = q => q.Include(ds => ds.Includes)
-            },
-            cancellationToken);
+        // Prepare query options
+        var options = new QueryOptions<DataSet>
+        {
+            Filtering = request.Filtering,
+            Ordering = request.Ordering,
+            IncludeFunc = q => q.Include(ds => ds.Includes)
+        };
+
+        query = await _queryService.PrepareQueryAsync(query, options, cancellationToken);
 
         return await _queryService.ExecutePaginatedQueryAsync(
             query,

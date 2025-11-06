@@ -1,6 +1,7 @@
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using InstanceManager.Application.Contracts.Common;
+using InstanceManager.Application.Core.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace InstanceManager.Application.Core.Common;
@@ -13,9 +14,11 @@ public interface IQueryService
 }
 
 /// <summary>
-/// Generic query service interface for a specific entity type
+/// Generic query service interface for a specific entity type with primary key
 /// </summary>
-public interface IQueryService<TEntity> : IQueryService where TEntity : class
+public interface IQueryService<TEntity, TPrimaryKey> : IQueryService
+    where TEntity : class, IEntity<TPrimaryKey>
+    where TPrimaryKey : notnull
 {
     IQueryable<TEntity> ApplyOrdering(IQueryable<TEntity> query, OrderingParameters ordering);
     IQueryable<TEntity> ApplyPagination(IQueryable<TEntity> query, PaginationParameters pagination);
@@ -24,11 +27,10 @@ public interface IQueryService<TEntity> : IQueryService where TEntity : class
         PaginationParameters pagination,
         Func<List<TEntity>, List<TDto>> mapper,
         CancellationToken cancellationToken = default);
+
     Task<IQueryable<TEntity>> PrepareQueryAsync(
         IQueryable<TEntity> query,
-        FilteringParameters filtering,
-        OrderingParameters ordering,
-        QueryOptions<TEntity>? options = null,
+        QueryOptions<TEntity, TPrimaryKey>? options = null,
         CancellationToken cancellationToken = default);
 
     Task<PaginatedList<TDto>> ExecutePaginatedQueryAsync<TDto>(
@@ -36,13 +38,27 @@ public interface IQueryService<TEntity> : IQueryService where TEntity : class
         PaginationParameters pagination,
         Func<List<TEntity>, List<TDto>> mapper,
         CancellationToken cancellationToken = default);
+
+    // ID-based helper methods
+    IQueryable<TEntity> FilterById(IQueryable<TEntity> query, TPrimaryKey id);
+    IQueryable<TEntity> FilterByIds(IQueryable<TEntity> query, IEnumerable<TPrimaryKey> ids);
+    Task<TEntity?> GetByIdAsync(IQueryable<TEntity> query, TPrimaryKey id, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
-/// Generic query service implementation for a specific entity type.
+/// Generic query service interface for entities with Guid primary key (backward compatibility)
+/// </summary>
+public interface IQueryService<TEntity> : IQueryService<TEntity, Guid> where TEntity : class, IEntity<Guid>
+{
+}
+
+/// <summary>
+/// Generic query service implementation for a specific entity type with primary key.
 /// Use this to create entity-specific query services like TranslationsQueryService.
 /// </summary>
-public class QueryService<TEntity> : IQueryService<TEntity> where TEntity : class
+public class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity, TPrimaryKey>
+    where TEntity : class, IEntity<TPrimaryKey>
+    where TPrimaryKey : notnull
 {
     private readonly IFilterHandlerRegistry _filterHandlerRegistry;
 
@@ -97,21 +113,25 @@ public class QueryService<TEntity> : IQueryService<TEntity> where TEntity : clas
     }
 
     /// <summary>
-    /// Prepares a query by applying filters, includes, and ordering (but not pagination)
+    /// Prepares a query by applying filters, includes, and ordering (but not pagination).
+    /// All configuration is provided through QueryOptions.
     /// </summary>
     public virtual async Task<IQueryable<TEntity>> PrepareQueryAsync(
         IQueryable<TEntity> query,
-        FilteringParameters filtering,
-        OrderingParameters ordering,
-        QueryOptions<TEntity>? options = null,
+        QueryOptions<TEntity, TPrimaryKey>? options = null,
         CancellationToken cancellationToken = default)
     {
+        if (options == null)
+        {
+            return query;
+        }
+
         // Apply filters
-        if (filtering.HasQueryFilters())
+        if (options.Filtering?.HasQueryFilters() == true)
         {
             var filterHandlers = _filterHandlerRegistry.GetHandlersForEntity<TEntity>();
 
-            foreach (var filter in filtering.QueryFilters.Where(f => f.IsActive()))
+            foreach (var filter in options.Filtering.QueryFilters.Where(f => f.IsActive()))
             {
                 var filterType = filter.GetType();
                 if (!filterHandlers.TryGetValue(filterType, out var handler))
@@ -137,19 +157,19 @@ public class QueryService<TEntity> : IQueryService<TEntity> where TEntity : clas
             }
         }
 
-        if (options != null)
+        // Apply includes if provided
+        if (options.IncludeFunc != null)
         {
-            // Apply includes if provided
-            if (options.IncludeFunc != null)
-            {
-                query = options.IncludeFunc(query);
-            }
+            query = options.IncludeFunc(query);
         }
 
-        // Apply ordering
-        query = ApplyOrdering(query, ordering);
+        // Apply ordering if provided
+        if (options.Ordering != null)
+        {
+            query = ApplyOrdering(query, options.Ordering);
+        }
 
-        return await Task.FromResult(query);
+        return query;
     }
 
     /// <summary>
@@ -162,5 +182,49 @@ public class QueryService<TEntity> : IQueryService<TEntity> where TEntity : clas
         CancellationToken cancellationToken = default)
     {
         return await ToPaginatedListAsync(query, pagination, mapper, cancellationToken);
+    }
+
+    /// <summary>
+    /// Filters a query to return only the entity with the specified ID
+    /// </summary>
+    public IQueryable<TEntity> FilterById(IQueryable<TEntity> query, TPrimaryKey id)
+    {
+        return query.Where(e => e.Id.Equals(id));
+    }
+
+    /// <summary>
+    /// Filters a query to return only entities with IDs in the specified collection
+    /// </summary>
+    public IQueryable<TEntity> FilterByIds(IQueryable<TEntity> query, IEnumerable<TPrimaryKey> ids)
+    {
+        return query.Where(e => ids.Contains(e.Id));
+    }
+
+    /// <summary>
+    /// Gets a single entity by ID, with optional query preparation (authorization, includes, filters, etc.).
+    /// The query is prepared using PrepareQueryAsync before filtering by ID.
+    /// </summary>
+    public async Task<TEntity?> GetByIdAsync(
+        IQueryable<TEntity> query,
+        TPrimaryKey id,
+        QueryOptions<TEntity, TPrimaryKey>? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Apply authorization, filters, and includes via PrepareQueryAsync
+        query = await PrepareQueryAsync(query, options, cancellationToken);
+
+        // Filter by ID and fetch
+        return await FilterById(query, id).FirstOrDefaultAsync(cancellationToken);
+    }
+}
+
+/// <summary>
+/// Generic query service implementation for entities with Guid primary key (backward compatibility)
+/// </summary>
+public class QueryService<TEntity> : QueryService<TEntity, Guid>
+    where TEntity : class, IEntity<Guid>
+{
+    public QueryService(IFilterHandlerRegistry filterHandlerRegistry) : base(filterHandlerRegistry)
+    {
     }
 }

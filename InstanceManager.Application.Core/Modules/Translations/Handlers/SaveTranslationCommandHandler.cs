@@ -8,10 +8,12 @@ namespace InstanceManager.Application.Core.Modules.Translations.Handlers;
 public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationCommand, Guid>
 {
     private readonly InstanceManagerDbContext _context;
+    private readonly TranslationsQueryService _queryService;
 
-    public SaveTranslationCommandHandler(InstanceManagerDbContext context)
+    public SaveTranslationCommandHandler(InstanceManagerDbContext context, TranslationsQueryService queryService)
     {
         _context = context;
+        _queryService = queryService;
     }
 
     public async Task<Guid> Handle(SaveTranslationCommand request, CancellationToken cancellationToken)
@@ -20,13 +22,16 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
 
         if (request.Id.HasValue && request.Id.Value != Guid.Empty)
         {
-            // Update existing
-            translation = await _context.Translations
-                .FirstOrDefaultAsync(t => t.Id == request.Id.Value, cancellationToken);
+            // Update existing - GetByIdAsync applies authorization automatically
+            translation = await _queryService.GetByIdAsync(
+                _context.Translations.AsQueryable(),
+                request.Id.Value,
+                options: null,
+                cancellationToken);
 
             if (translation == null)
             {
-                throw new KeyNotFoundException($"Translation with Id {request.Id} not found.");
+                throw new KeyNotFoundException($"Translation with Id {request.Id} not found or you don't have access to it.");
             }
 
             translation.InternalGroupName = request.InternalGroupName;
