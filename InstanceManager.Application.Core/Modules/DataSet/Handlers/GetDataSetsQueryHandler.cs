@@ -32,10 +32,10 @@ public class GetDataSetsQueryHandler : IRequestHandler<GetDataSetsQuery, Paginat
 
         query = await _queryService.PrepareQueryAsync(query, options, cancellationToken);
 
-        return await _queryService.ExecutePaginatedQueryAsync(
+        return await _queryService.ExecutePaginatedQueryAsync<DataSetDto>(
             query,
             request.Pagination,
-            dataSets => dataSets.ToDto(),
+            (Func<List<DataSet>, List<DataSetDto>>)(dataSets => dataSets.ToDto()),
             cancellationToken);
     }
 }

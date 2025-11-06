@@ -31,10 +31,10 @@ public class GetProjectInstancesQueryHandler : IRequestHandler<GetProjectInstanc
 
         query = await _queryService.PrepareQueryAsync(query, options, cancellationToken);
 
-        return await _queryService.ExecutePaginatedQueryAsync(
+        return await _queryService.ExecutePaginatedQueryAsync<ProjectInstanceDto>(
             query,
             request.Pagination,
-            instances => instances.ToDto(),
+            (Func<List<ProjectInstance>, List<ProjectInstanceDto>>)(instances => instances.ToDto()),
             cancellationToken);
     }
 }

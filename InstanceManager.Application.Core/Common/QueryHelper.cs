@@ -39,10 +39,17 @@ public interface IQueryService<TEntity, TPrimaryKey> : IQueryService
         Func<List<TEntity>, List<TDto>> mapper,
         CancellationToken cancellationToken = default);
 
+    Task<PaginatedList<TDto>> ExecutePaginatedQueryAsync<TDto>(
+        IQueryable<TEntity> query,
+        PaginationParameters pagination,
+        Expression<Func<TEntity, TDto>>? selector = null,
+        CancellationToken cancellationToken = default);
+
     // ID-based helper methods
     IQueryable<TEntity> FilterById(IQueryable<TEntity> query, TPrimaryKey id);
     IQueryable<TEntity> FilterByIds(IQueryable<TEntity> query, IEnumerable<TPrimaryKey> ids);
     Task<TEntity?> GetByIdAsync(IQueryable<TEntity> query, TPrimaryKey id, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
+    Task<TResult?> GetByIdAsync<TResult>(IQueryable<TEntity> query, TPrimaryKey id, Expression<Func<TEntity, TResult>>? selector = null, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -215,6 +222,70 @@ public class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity, TPrimar
 
         // Filter by ID and fetch
         return await FilterById(query, id).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets a single entity by ID with optional projection, with optional query preparation (authorization, includes, filters, etc.).
+    /// If selector is null, returns the full entity cast to TResult (TResult should be TEntity in this case).
+    /// If selector is provided, it's applied at the database level for efficient querying.
+    /// </summary>
+    public async Task<TResult?> GetByIdAsync<TResult>(
+        IQueryable<TEntity> query,
+        TPrimaryKey id,
+        Expression<Func<TEntity, TResult>>? selector = null,
+        QueryOptions<TEntity, TPrimaryKey>? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Apply authorization, filters, and includes via PrepareQueryAsync
+        query = await PrepareQueryAsync(query, options, cancellationToken);
+
+        // Filter by ID
+        var filteredQuery = FilterById(query, id);
+
+        // Apply selector if provided, otherwise return entity as TResult
+        if (selector != null)
+        {
+            return await filteredQuery.Select(selector).FirstOrDefaultAsync(cancellationToken);
+        }
+        else
+        {
+            // No projection - return full entity cast to TResult
+            var entity = await filteredQuery.FirstOrDefaultAsync(cancellationToken);
+            return (TResult?)(object?)entity;
+        }
+    }
+
+    /// <summary>
+    /// Executes a prepared query with optional projection and returns paginated results.
+    /// If selector is null, returns full entities cast to TDto (TDto should be TEntity in this case).
+    /// If selector is provided, it's applied at the database level for efficient querying.
+    /// </summary>
+    public async Task<PaginatedList<TItem>> ExecutePaginatedQueryAsync<TItem>(
+        IQueryable<TEntity> query,
+        PaginationParameters pagination,
+        Expression<Func<TEntity, TItem>>? selector = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Get total count before pagination
+        var totalItems = await query.CountAsync(cancellationToken);
+
+        // Apply pagination
+        var paginatedQuery = ApplyPagination(query, pagination);
+
+        // Apply selector if provided, otherwise cast entities to TDto
+        List<TItem> dtos;
+        if (selector != null)
+        {
+            dtos = await paginatedQuery.Select(selector).ToListAsync(cancellationToken);
+        }
+        else
+        {
+            // No projection - return full entities cast to TDto
+            var entities = await paginatedQuery.ToListAsync(cancellationToken);
+            dtos = entities.Cast<TItem>().ToList();
+        }
+
+        return new PaginatedList<TItem>(dtos, totalItems, pagination.PageNumber, pagination.PageSize);
     }
 }
 

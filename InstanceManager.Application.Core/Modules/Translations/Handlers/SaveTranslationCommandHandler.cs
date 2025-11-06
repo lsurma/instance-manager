@@ -23,11 +23,11 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
         if (request.Id.HasValue && request.Id.Value != Guid.Empty)
         {
             // Update existing - GetByIdAsync applies authorization automatically
-            translation = await _queryService.GetByIdAsync(
+            // No selector needed - returns full Translation entity
+            translation = await _queryService.GetByIdAsync<Translation>(
                 _context.Translations.AsQueryable(),
                 request.Id.Value,
-                options: null,
-                cancellationToken);
+                cancellationToken: cancellationToken);
 
             if (translation == null)
             {

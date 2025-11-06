@@ -18,11 +18,11 @@ public class DeleteTranslationCommandHandler : IRequestHandler<DeleteTranslation
     public async Task<bool> Handle(DeleteTranslationCommand request, CancellationToken cancellationToken)
     {
         // GetByIdAsync applies authorization automatically via TranslationsQueryService
-        var translation = await _queryService.GetByIdAsync(
+        // No selector needed - returns full Translation entity
+        var translation = await _queryService.GetByIdAsync<Translation>(
             _context.Translations.AsQueryable(),
             request.Id,
-            options: null,
-            cancellationToken);
+            cancellationToken: cancellationToken);
 
         if (translation == null)
         {

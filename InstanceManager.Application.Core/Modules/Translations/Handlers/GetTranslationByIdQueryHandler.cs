@@ -18,14 +18,25 @@ public class GetTranslationByIdQueryHandler : IRequestHandler<GetTranslationById
 
     public async Task<TranslationDto?> Handle(GetTranslationByIdQuery request, CancellationToken cancellationToken)
     {
-        // GetByIdAsync now handles PrepareQueryAsync internally
+        // Use selector-based GetByIdAsync for database-level projection (more efficient)
         // This applies authorization filtering automatically via TranslationsQueryService
-        var translation = await _queryService.GetByIdAsync(
+        return await _queryService.GetByIdAsync(
             _context.Translations.AsNoTracking(),
             request.Id,
+            t => new TranslationDto
+            {
+                Id = t.Id,
+                InternalGroupName = t.InternalGroupName,
+                ResourceName = t.ResourceName,
+                TranslationName = t.TranslationName,
+                CultureName = t.CultureName,
+                Content = t.Content,
+                DataSetId = t.DataSetId,
+                CreatedAt = t.CreatedAt,
+                UpdatedAt = t.UpdatedAt,
+                CreatedBy = t.CreatedBy
+            },
             options: null,
             cancellationToken);
-
-        return translation?.ToDto();
     }
 }

@@ -32,10 +32,23 @@ public class GetTranslationsQueryHandler : IRequestHandler<GetTranslationsQuery,
         // Query service automatically applies authorization pre-filtering
         query = await _queryService.PrepareQueryAsync(query, options, cancellationToken);
 
+        // Use selector-based method for database-level projection (more efficient)
         return await _queryService.ExecutePaginatedQueryAsync(
             query,
             request.Pagination,
-            translations => translations.ToDto(),
+            t => new TranslationDto
+            {
+                Id = t.Id,
+                InternalGroupName = t.InternalGroupName,
+                ResourceName = t.ResourceName,
+                TranslationName = t.TranslationName,
+                CultureName = t.CultureName,
+                Content = t.Content,
+                DataSetId = t.DataSetId,
+                CreatedAt = t.CreatedAt,
+                UpdatedAt = t.UpdatedAt,
+                CreatedBy = t.CreatedBy
+            },
             cancellationToken);
     }
 }
