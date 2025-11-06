@@ -16,7 +16,8 @@ public static class ServiceCollectionExtensions
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly));
 
-        // Register generic query service
+        // Register generic query services (both single and double generic parameter versions)
+        services.AddScoped(typeof(IQueryService<,>), typeof(QueryService<,>));
         services.AddScoped(typeof(IQueryService<>), typeof(QueryService<>));
 
         // Register authorization service (mock for now)

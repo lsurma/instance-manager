@@ -292,7 +292,7 @@ public class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity, TPrimar
 /// <summary>
 /// Generic query service implementation for entities with Guid primary key (backward compatibility)
 /// </summary>
-public class QueryService<TEntity> : QueryService<TEntity, Guid>
+public class QueryService<TEntity> : QueryService<TEntity, Guid>, IQueryService<TEntity>
     where TEntity : class, IEntity<Guid>
 {
     public QueryService(IFilterHandlerRegistry filterHandlerRegistry) : base(filterHandlerRegistry)
