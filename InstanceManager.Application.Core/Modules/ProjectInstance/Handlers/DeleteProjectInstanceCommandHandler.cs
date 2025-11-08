@@ -7,15 +7,21 @@ namespace InstanceManager.Application.Core.Modules.ProjectInstance.Handlers;
 public class DeleteProjectInstanceCommandHandler : IRequestHandler<DeleteProjectInstanceCommand, bool>
 {
     private readonly InstanceManagerDbContext _context;
+    private readonly ProjectInstancesQueryService _queryService;
 
-    public DeleteProjectInstanceCommandHandler(InstanceManagerDbContext context)
+    public DeleteProjectInstanceCommandHandler(InstanceManagerDbContext context, ProjectInstancesQueryService queryService)
     {
         _context = context;
+        _queryService = queryService;
     }
 
     public async Task<bool> Handle(DeleteProjectInstanceCommand request, CancellationToken cancellationToken)
     {
-        var instance = await _context.ProjectInstances.FindAsync([request.Id], cancellationToken);
+        var instance = await _queryService.GetByIdAsync(
+            request.Id,
+            cancellationToken: cancellationToken
+        );
+
         if (instance == null)
         {
             return false;

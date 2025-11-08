@@ -1,4 +1,5 @@
 using InstanceManager.Application.Contracts.Modules.DataSet;
+using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -8,22 +9,31 @@ namespace InstanceManager.Application.Core.Modules.DataSet.Handlers;
 public class SaveDataSetCommandHandler : IRequestHandler<SaveDataSetCommand, Guid>
 {
     private readonly InstanceManagerDbContext _context;
+    private readonly DataSetsQueryService _queryService;
 
-    public SaveDataSetCommandHandler(InstanceManagerDbContext context)
+    public SaveDataSetCommandHandler(InstanceManagerDbContext context, DataSetsQueryService queryService)
     {
         _context = context;
+        _queryService = queryService;
     }
 
     public async Task<Guid> Handle(SaveDataSetCommand request, CancellationToken cancellationToken)
     {
-        DataSet dataSet;
+        DataSet? dataSet;
 
         if (request.Id.HasValue && request.Id.Value != Guid.Empty)
         {
-            // Update existing
-            dataSet = await _context.DataSets
-                .Include(ds => ds.Includes)
-                .FirstOrDefaultAsync(ds => ds.Id == request.Id.Value, cancellationToken);
+            // Update existing - use QueryService for consistent querying
+            var options = new QueryOptions<DataSet, Guid>
+            {
+                IncludeFunc = q => q.Include(ds => ds.Includes)
+            };
+
+            dataSet = await _queryService.GetByIdAsync(
+                request.Id.Value,
+                options: options,
+                cancellationToken: cancellationToken
+            );
 
             if (dataSet == null)
             {

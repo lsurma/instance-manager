@@ -7,20 +7,26 @@ namespace InstanceManager.Application.Core.Modules.ProjectInstance.Handlers;
 public class SaveProjectInstanceCommandHandler : IRequestHandler<SaveProjectInstanceCommand, Guid>
 {
     private readonly InstanceManagerDbContext _context;
+    private readonly ProjectInstancesQueryService _queryService;
 
-    public SaveProjectInstanceCommandHandler(InstanceManagerDbContext context)
+    public SaveProjectInstanceCommandHandler(InstanceManagerDbContext context, ProjectInstancesQueryService queryService)
     {
         _context = context;
+        _queryService = queryService;
     }
 
     public async Task<Guid> Handle(SaveProjectInstanceCommand request, CancellationToken cancellationToken)
     {
-        ProjectInstance instance;
+        ProjectInstance? instance;
 
         if (request.Id.HasValue && request.Id.Value != Guid.Empty)
         {
-            // Update existing
-            instance = await _context.ProjectInstances.FindAsync([request.Id.Value], cancellationToken);
+            // Update existing - use QueryService for consistent querying
+            instance = await _queryService.GetByIdAsync(
+                request.Id.Value,
+                cancellationToken: cancellationToken
+            );
+
             if (instance == null)
             {
                 throw new KeyNotFoundException($"ProjectInstance with Id {request.Id} not found.");
