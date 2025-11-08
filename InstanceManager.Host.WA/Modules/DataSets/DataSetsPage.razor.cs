@@ -162,13 +162,7 @@ public partial class DataSetsPage : ComponentBase, IDisposable
             .OfType<SearchFilter>()
             .FirstOrDefault()?.SearchTerm;
     }
-    
-    private void ClearSearch()
-    {
-        _searchTerm = null;
-        OnSearchChanged();
-    }
-    
+
     private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         await ProcessUrlParametersAsync();

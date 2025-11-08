@@ -298,13 +298,7 @@ public partial class InstancesPage : ComponentBase, IDisposable
             .OfType<SearchFilter>()
             .FirstOrDefault()?.SearchTerm;
     }
-    
-    private void ClearSearch()
-    {
-        _searchTerm = null;
-        OnSearchChanged();
-    }
-    
+
     private Guid? _selectedInstanceId;
     
     private Guid? GetSelectedInstanceId()

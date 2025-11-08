@@ -22,33 +22,16 @@
             RefreshToken="@_refreshToken"
             OnDataFetched="HandleDataFetched">
     <ChildContent Context="result">
-        <FluentStack Orientation="Orientation.Horizontal" Style="margin-bottom: 16px;" VerticalAlignment="VerticalAlignment.Center">
-            <FluentSearch Placeholder="Search datasets..."
-                         @bind-Value="@_searchTerm"
-                         @bind-Value:after="OnSearchChanged"
-                         Style="width: 300px;" />
-            @if (!string.IsNullOrWhiteSpace(_searchTerm))
-            {
-                <FluentButton Appearance="Appearance.Lightweight"
-                              IconStart="@(new Icons.Regular.Size20.Dismiss())"
-                              OnClick="ClearSearch">
-                    Clear
-                </FluentButton>
-            }
-        </FluentStack>
-        
-        <RadzenDataGrid Data="@AllDataSets"
-                        LoadData="@OnLoadData"
-                        Count="@_totalItems"
-                        TItem="DataSetDto" 
-                        AllowFiltering="true" 
-                        AllowSorting="true" 
-                        AllowPaging="true" 
-                        PageSize="@_pageSize"
-                        FilterPopupRenderMode="PopupRenderMode.OnDemand"
-                        SelectionMode="DataGridSelectionMode.Single"
-                        Value="@_selectedRows"
-                        ValueChanged="@OnDataGridSelectionChanged">
+        <PaginatedDataGrid TItem="DataSetDto"
+                          Items="@AllDataSets"
+                          TotalItems="@_totalItems"
+                          PageSize="@_pageSize"
+                          SearchPlaceholder="Search datasets..."
+                          @bind-SearchTerm="@_searchTerm"
+                          OnSearchChanged="@OnSearchChanged"
+                          LoadData="@OnLoadData"
+                          SelectedRows="@_selectedRows"
+                          SelectedRowsChanged="@OnDataGridSelectionChanged">
             <Columns>
                 <RadzenDataGridColumn TItem="DataSetDto" Property="Name" Title="Name" />
                 <RadzenDataGridColumn TItem="DataSetDto" Property="Description" Title="Description" />
@@ -66,7 +49,7 @@
                     </Template>
                 </RadzenDataGridColumn>
             </Columns>
-        </RadzenDataGrid>
+        </PaginatedDataGrid>
     </ChildContent>
 </DataLoader>
 

@@ -1,0 +1,42 @@
+@typeparam TItem
+@using InstanceManager.Application.Contracts.Common
+@using Radzen
+@using Radzen.Blazor
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+
+<FluentStack Orientation="Orientation.Horizontal" Style="margin-bottom: 16px;" VerticalAlignment="VerticalAlignment.Center">
+    <FluentSearch Placeholder="@SearchPlaceholder"
+                 @bind-Value="@SearchTerm"
+                 @bind-Value:after="HandleSearchChanged"
+                 Style="width: 300px;" />
+    @if (!string.IsNullOrWhiteSpace(SearchTerm))
+    {
+        <FluentButton Appearance="Appearance.Lightweight"
+                      IconStart="@(new Icons.Regular.Size20.Dismiss())"
+                      OnClick="HandleClearSearch">
+            Clear
+        </FluentButton>
+    }
+
+    @if (AdditionalFilters != null)
+    {
+        @AdditionalFilters
+    }
+</FluentStack>
+
+<RadzenDataGrid Data="@Items"
+                LoadData="@OnLoadData"
+                Count="@TotalItems"
+                TItem="TItem"
+                AllowFiltering="@AllowFiltering"
+                AllowSorting="@AllowSorting"
+                AllowPaging="@AllowPaging"
+                PageSize="@PageSize"
+                FilterPopupRenderMode="PopupRenderMode.OnDemand"
+                SelectionMode="@SelectionMode"
+                Value="@SelectedRows"
+                ValueChanged="@OnSelectionChanged">
+    <Columns>
+        @Columns
+    </Columns>
+</RadzenDataGrid>

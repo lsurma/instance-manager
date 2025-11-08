@@ -222,14 +222,7 @@ public partial class TranslationsPage : ComponentBase, IDisposable
         
         return existingCultureFilter?.Value == _cultureNameFilter;
     }
-    
-    
-    private void ClearSearch()
-    {
-        _searchTerm = null;
-        OnSearchChanged();
-    }
-    
+
     private void ClearCultureFilter()
     {
         _cultureNameFilter = null;
