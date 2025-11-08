@@ -20,23 +20,15 @@ public class GetTranslationsQueryHandler : IRequestHandler<GetTranslationsQuery,
 
     public async Task<PaginatedList<TranslationDto>> Handle(GetTranslationsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Translations.AsNoTracking();
+        IQueryable<Translation> query = _context.Translations;
 
-        // Prepare query options
-        var options = new QueryOptions<Translation>
+        // Create complete query specification with all configuration in one place
+        var options = new QueryOptions<Translation, Guid, TranslationDto>
         {
+            AsNoTracking = true,
             Filtering = request.Filtering,
-            Ordering = request.Ordering
-        };
-
-        // Query service automatically applies authorization pre-filtering
-        query = await _queryService.PrepareQueryAsync(query, options, cancellationToken);
-
-        // Use selector-based method for database-level projection (more efficient)
-        return await _queryService.ExecutePaginatedQueryAsync(
-            query,
-            request.Pagination,
-            t => new TranslationDto
+            Ordering = request.Ordering,
+            Selector = t => new TranslationDto
             {
                 Id = t.Id,
                 InternalGroupName = t.InternalGroupName,
@@ -48,7 +40,17 @@ public class GetTranslationsQueryHandler : IRequestHandler<GetTranslationsQuery,
                 CreatedAt = t.CreatedAt,
                 UpdatedAt = t.UpdatedAt,
                 CreatedBy = t.CreatedBy
-            },
+            }
+        };
+
+        // Apply query preparation (authorization, filters, ordering)
+        query = await _queryService.PrepareQueryAsync(query, options, cancellationToken);
+
+        // Execute paginated query with projection
+        return await _queryService.ExecutePaginatedQueryAsync(
+            query,
+            request.Pagination,
+            options,
             cancellationToken);
     }
 }

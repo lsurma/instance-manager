@@ -10,9 +10,9 @@ namespace InstanceManager.Application.Core.Modules.ProjectInstance.Handlers;
 public class GetProjectInstancesQueryHandler : IRequestHandler<GetProjectInstancesQuery, PaginatedList<ProjectInstanceDto>>
 {
     private readonly InstanceManagerDbContext _context;
-    private readonly IQueryService<ProjectInstance> _queryService;
+    private readonly IQueryService<ProjectInstance, Guid> _queryService;
 
-    public GetProjectInstancesQueryHandler(InstanceManagerDbContext context, IQueryService<ProjectInstance> queryService)
+    public GetProjectInstancesQueryHandler(InstanceManagerDbContext context, IQueryService<ProjectInstance, Guid> queryService)
     {
         _context = context;
         _queryService = queryService;
@@ -23,7 +23,7 @@ public class GetProjectInstancesQueryHandler : IRequestHandler<GetProjectInstanc
         var query = _context.ProjectInstances.AsNoTracking();
 
         // Prepare query options
-        var options = new QueryOptions<ProjectInstance>
+        var options = new QueryOptions<ProjectInstance, Guid>
         {
             Filtering = request.Filtering,
             Ordering = request.Ordering

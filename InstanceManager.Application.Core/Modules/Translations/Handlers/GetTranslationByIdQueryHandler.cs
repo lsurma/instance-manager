@@ -1,4 +1,5 @@
 using InstanceManager.Application.Contracts.Modules.Translations;
+using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -18,12 +19,12 @@ public class GetTranslationByIdQueryHandler : IRequestHandler<GetTranslationById
 
     public async Task<TranslationDto?> Handle(GetTranslationByIdQuery request, CancellationToken cancellationToken)
     {
-        // Use selector-based GetByIdAsync for database-level projection (more efficient)
+        // Use QueryOptions with Selector for database-level projection (Specification Pattern)
         // This applies authorization filtering automatically via TranslationsQueryService
-        return await _queryService.GetByIdAsync(
-            _context.Translations.AsNoTracking(),
-            request.Id,
-            t => new TranslationDto
+        var options = new QueryOptions<Translation, Guid, TranslationDto>
+        {
+            AsNoTracking = true,
+            Selector = t => new TranslationDto
             {
                 Id = t.Id,
                 InternalGroupName = t.InternalGroupName,
@@ -35,8 +36,13 @@ public class GetTranslationByIdQueryHandler : IRequestHandler<GetTranslationById
                 CreatedAt = t.CreatedAt,
                 UpdatedAt = t.UpdatedAt,
                 CreatedBy = t.CreatedBy
-            },
-            options: null,
+            }
+        };
+
+        return await _queryService.GetByIdAsync(
+            _context.Translations,
+            request.Id,
+            options,
             cancellationToken);
     }
 }

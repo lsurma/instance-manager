@@ -1,6 +1,8 @@
 using System.Reflection;
 using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
+using InstanceManager.Application.Core.Modules.DataSet;
+using InstanceManager.Application.Core.Modules.ProjectInstance;
 using InstanceManager.Application.Core.Modules.Translations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,14 +18,15 @@ public static class ServiceCollectionExtensions
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly));
 
-        // Register generic query services (both single and double generic parameter versions)
-        services.AddScoped(typeof(IQueryService<,>), typeof(QueryService<,>));
-        services.AddScoped(typeof(IQueryService<>), typeof(QueryService<>));
-
         // Register authorization service (mock for now)
         services.AddScoped<IAuthorizationService, MockAuthorizationService>();
 
-        // Register specialized query services
+        // Register entity-specific query services
+        services.AddScoped<IQueryService<DataSet, Guid>, DataSetsQueryService>();
+        services.AddScoped<IQueryService<ProjectInstance, Guid>, ProjectInstancesQueryService>();
+        services.AddScoped<IQueryService<Translation, Guid>, TranslationsQueryService>();
+
+        // Also register TranslationsQueryService directly for injection when needed
         services.AddScoped<TranslationsQueryService>();
 
         services.AddSingleton<IFilterHandlerRegistry, FilterHandlerRegistry>();
