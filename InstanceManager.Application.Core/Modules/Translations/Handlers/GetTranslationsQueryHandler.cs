@@ -20,8 +20,6 @@ public class GetTranslationsQueryHandler : IRequestHandler<GetTranslationsQuery,
 
     public async Task<PaginatedList<TranslationDto>> Handle(GetTranslationsQuery request, CancellationToken cancellationToken)
     {
-        IQueryable<Translation> query = _context.Translations;
-
         // Create complete query specification with all configuration in one place
         var options = new QueryOptions<Translation, Guid, TranslationDto>
         {
@@ -44,7 +42,8 @@ public class GetTranslationsQueryHandler : IRequestHandler<GetTranslationsQuery,
         };
 
         // Apply query preparation (authorization, filters, ordering)
-        query = await _queryService.PrepareQueryAsync(query, options, cancellationToken);
+        // No need to pass query - service uses DefaultQuery
+        var query = await _queryService.PrepareQueryAsync(options: options, cancellationToken: cancellationToken);
 
         // Execute paginated query with projection
         return await _queryService.ExecutePaginatedQueryAsync(

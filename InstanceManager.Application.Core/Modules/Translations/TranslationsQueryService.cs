@@ -1,5 +1,6 @@
 using InstanceManager.Application.Contracts.Common;
 using InstanceManager.Application.Core.Common;
+using InstanceManager.Application.Core.Data;
 
 namespace InstanceManager.Application.Core.Modules.Translations;
 
@@ -8,15 +9,20 @@ namespace InstanceManager.Application.Core.Modules.Translations;
 /// </summary>
 public class TranslationsQueryService : QueryService<Translation, Guid>
 {
+    private readonly InstanceManagerDbContext _context;
     private readonly IAuthorizationService _authorizationService;
 
     public TranslationsQueryService(
+        InstanceManagerDbContext context,
         IFilterHandlerRegistry filterHandlerRegistry,
         IAuthorizationService authorizationService)
         : base(filterHandlerRegistry)
     {
+        _context = context;
         _authorizationService = authorizationService;
     }
+
+    protected override IQueryable<Translation> DefaultQuery => _context.Translations;
 
     /// <summary>
     /// Applies authorization filtering to ensure user only sees translations from accessible datasets.
@@ -48,16 +54,27 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
     /// <summary>
     /// Prepares a query with authorization pre-filtering, applying filters, includes, and ordering.
     /// Only translations from accessible datasets will be included.
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public override async Task<IQueryable<Translation>> PrepareQueryAsync(
-        IQueryable<Translation> query,
+        IQueryable<Translation>? query = null,
         QueryOptions<Translation, Guid>? options = null,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
+
         // Apply authorization pre-filter first
         query = await ApplyAuthorizationAsync(query, cancellationToken);
 
         // Call base implementation to apply filters, includes, and ordering
         return await base.PrepareQueryAsync(query, options, cancellationToken);
+    }
+
+    public class Options : QueryOptions<Translation, Guid, Translation>
+    {
+        public Options()
+        {
+            AsNoTracking = true;
+        }
     }
 }

@@ -39,10 +39,10 @@ public class GetTranslationByIdQueryHandler : IRequestHandler<GetTranslationById
             }
         };
 
+        // No need to pass _context.Translations - the service uses its DefaultQuery
         return await _queryService.GetByIdAsync(
-            _context.Translations,
             request.Id,
-            options,
-            cancellationToken);
+            options: options,
+            cancellationToken: cancellationToken);
     }
 }

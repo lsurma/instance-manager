@@ -31,58 +31,59 @@ public interface IQueryService<TEntity, TPrimaryKey> : IQueryService
         CancellationToken cancellationToken = default);
 
     Task<IQueryable<TEntity>> PrepareQueryAsync(
-        IQueryable<TEntity> query,
+        IQueryable<TEntity>? query = null,
         QueryOptions<TEntity, TPrimaryKey>? options = null,
         CancellationToken cancellationToken = default);
 
     Task<PaginatedList<TDto>> ExecutePaginatedQueryAsync<TDto>(
-        IQueryable<TEntity> query,
+        IQueryable<TEntity>? query,
         PaginationParameters pagination,
         Func<List<TEntity>, List<TDto>> mapper,
         CancellationToken cancellationToken = default);
 
     Task<PaginatedList<TItem>> ExecutePaginatedQueryAsync<TItem>(
-        IQueryable<TEntity> query,
+        IQueryable<TEntity>? query,
         PaginationParameters pagination,
         QueryOptions<TEntity, TPrimaryKey, TItem>? options = null,
         CancellationToken cancellationToken = default);
 
     // ID-based helper methods
-    IQueryable<TEntity> FilterById(IQueryable<TEntity> query, TPrimaryKey id);
-    
-    IQueryable<TEntity> FilterByIds(IQueryable<TEntity> query, IEnumerable<TPrimaryKey> ids);
-    
+    IQueryable<TEntity> FilterById(IQueryable<TEntity>? query, TPrimaryKey id);
 
-    Task<TEntity?> GetByIdAsync(IQueryable<TEntity> query, TPrimaryKey id, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
-    
-    Task<TResult?> GetByIdAsync<TResult>(IQueryable<TEntity> query, TPrimaryKey id, QueryOptions<TEntity, TPrimaryKey, TResult>? options = null, CancellationToken cancellationToken = default);
+    IQueryable<TEntity> FilterByIds(IQueryable<TEntity>? query, IEnumerable<TPrimaryKey> ids);
+
+
+    Task<TEntity?> GetByIdAsync(TPrimaryKey id, IQueryable<TEntity>? query = null, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
+
+    Task<TResult?> GetByIdAsync<TResult>(TPrimaryKey id, IQueryable<TEntity>? query = null, QueryOptions<TEntity, TPrimaryKey, TResult>? options = null, CancellationToken cancellationToken = default);
 
     // Batch operations
-    Task<List<TEntity>> GetByIdsAsync(IQueryable<TEntity> query, IEnumerable<TPrimaryKey> ids, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
-    
-    Task<List<TResult>> GetByIdsAsync<TResult>(IQueryable<TEntity> query, IEnumerable<TPrimaryKey> ids, QueryOptions<TEntity, TPrimaryKey, TResult>? options = null, CancellationToken cancellationToken = default);
+    Task<List<TEntity>> GetByIdsAsync(IEnumerable<TPrimaryKey> ids, IQueryable<TEntity>? query = null, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
+
+    Task<List<TResult>> GetByIdsAsync<TResult>(IEnumerable<TPrimaryKey> ids, IQueryable<TEntity>? query = null, QueryOptions<TEntity, TPrimaryKey, TResult>? options = null, CancellationToken cancellationToken = default);
 
     // Existence checks
-    Task<bool> ExistsAsync(IQueryable<TEntity> query, TPrimaryKey id, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
-    
-    Task<bool> AnyAsync(IQueryable<TEntity> query, Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+    Task<bool> ExistsAsync(TPrimaryKey id, IQueryable<TEntity>? query = null, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
+
+    Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, IQueryable<TEntity>? query = null, CancellationToken cancellationToken = default);
 
     // Count operations
-    Task<int> CountAsync(IQueryable<TEntity> query, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
+    Task<int> CountAsync(IQueryable<TEntity>? query = null, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
 
     // First/Single operations
-    Task<TEntity?> FirstOrDefaultAsync(IQueryable<TEntity> query, Expression<Func<TEntity, bool>> predicate, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
-    
-    Task<TResult?> FirstOrDefaultAsync<TResult>(IQueryable<TEntity> query, Expression<Func<TEntity, bool>> predicate, QueryOptions<TEntity, TPrimaryKey, TResult>? options = null, CancellationToken cancellationToken = default);
-    
-    Task<TEntity> SingleAsync(IQueryable<TEntity> query, Expression<Func<TEntity, bool>> predicate, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
-    
-    Task<TResult> SingleAsync<TResult>(IQueryable<TEntity> query, Expression<Func<TEntity, bool>> predicate, QueryOptions<TEntity, TPrimaryKey, TResult>? options = null, CancellationToken cancellationToken = default);
+    Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, IQueryable<TEntity>? query = null, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
+
+    Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, bool>> predicate, IQueryable<TEntity>? query = null, QueryOptions<TEntity, TPrimaryKey, TResult>? options = null, CancellationToken cancellationToken = default);
+
+    Task<TEntity> SingleAsync(Expression<Func<TEntity, bool>> predicate, IQueryable<TEntity>? query = null, QueryOptions<TEntity, TPrimaryKey>? options = null, CancellationToken cancellationToken = default);
+
+    Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity, bool>> predicate, IQueryable<TEntity>? query = null, QueryOptions<TEntity, TPrimaryKey, TResult>? options = null, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
 /// Abstract base query service implementation for a specific entity type with primary key.
 /// Use this to create entity-specific query services like TranslationsQueryService by inheriting from this class.
+/// Inject DbContext in derived classes and implement DefaultQuery to provide the default IQueryable.
 /// </summary>
 public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity, TPrimaryKey>
     where TEntity : class, IEntity<TPrimaryKey>
@@ -90,10 +91,21 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
 {
     private readonly IFilterHandlerRegistry _filterHandlerRegistry;
 
-    public QueryService(IFilterHandlerRegistry filterHandlerRegistry)
+    protected QueryService(IFilterHandlerRegistry filterHandlerRegistry)
     {
         _filterHandlerRegistry = filterHandlerRegistry;
     }
+
+    /// <summary>
+    /// Default queryable for this entity. Typically returns DbContext.EntitySet.
+    /// Override this property in derived classes to provide the DbSet from your DbContext.
+    /// </summary>
+    protected abstract IQueryable<TEntity> DefaultQuery { get; }
+
+    /// <summary>
+    /// Gets the query to use - either the provided query or the default from DbContext
+    /// </summary>
+    protected IQueryable<TEntity> GetQuery(IQueryable<TEntity>? query) => query ?? DefaultQuery;
 
     /// <summary>
     /// Applies ordering to a queryable if ordering parameters are specified
@@ -143,12 +155,15 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
     /// <summary>
     /// Prepares a query by applying filters, includes, and ordering (but not pagination).
     /// All configuration is provided through QueryOptions.
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public virtual async Task<IQueryable<TEntity>> PrepareQueryAsync(
-        IQueryable<TEntity> query,
+        IQueryable<TEntity>? query = null,
         QueryOptions<TEntity, TPrimaryKey>? options = null,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
+
         if (options == null)
         {
             return query;
@@ -213,43 +228,52 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
     }
 
     /// <summary>
-    /// Executes a prepared query and returns paginated results
+    /// Executes a prepared query and returns paginated results.
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public async Task<PaginatedList<TDto>> ExecutePaginatedQueryAsync<TDto>(
-        IQueryable<TEntity> query,
+        IQueryable<TEntity>? query,
         PaginationParameters pagination,
         Func<List<TEntity>, List<TDto>> mapper,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
         return await ToPaginatedListAsync(query, pagination, mapper, cancellationToken);
     }
 
     /// <summary>
-    /// Filters a query to return only the entity with the specified ID
+    /// Filters a query to return only the entity with the specified ID.
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
-    public IQueryable<TEntity> FilterById(IQueryable<TEntity> query, TPrimaryKey id)
+    public IQueryable<TEntity> FilterById(IQueryable<TEntity>? query, TPrimaryKey id)
     {
+        query = GetQuery(query);
         return query.Where(e => e.Id.Equals(id));
     }
 
     /// <summary>
-    /// Filters a query to return only entities with IDs in the specified collection
+    /// Filters a query to return only entities with IDs in the specified collection.
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
-    public IQueryable<TEntity> FilterByIds(IQueryable<TEntity> query, IEnumerable<TPrimaryKey> ids)
+    public IQueryable<TEntity> FilterByIds(IQueryable<TEntity>? query, IEnumerable<TPrimaryKey> ids)
     {
+        query = GetQuery(query);
         return query.Where(e => ids.Contains(e.Id));
     }
 
     /// <summary>
     /// Gets a single entity by ID, with optional query preparation (authorization, includes, filters, etc.).
     /// The query is prepared using PrepareQueryAsync before filtering by ID.
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public async Task<TEntity?> GetByIdAsync(
-        IQueryable<TEntity> query,
         TPrimaryKey id,
+        IQueryable<TEntity>? query = null,
         QueryOptions<TEntity, TPrimaryKey>? options = null,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
+
         // Apply authorization, filters, and includes via PrepareQueryAsync
         query = await PrepareQueryAsync(query, options, cancellationToken);
 
@@ -261,13 +285,16 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
     /// Gets a single entity by ID with optional projection, with optional query preparation (authorization, includes, filters, etc.).
     /// If options.Selector is null, returns the full entity cast to TResult (TResult should be TEntity in this case).
     /// If options.Selector is provided, it's applied at the database level for efficient querying.
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public async Task<TResult?> GetByIdAsync<TResult>(
-        IQueryable<TEntity> query,
         TPrimaryKey id,
+        IQueryable<TEntity>? query = null,
         QueryOptions<TEntity, TPrimaryKey, TResult>? options = null,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
+
         // Apply authorization, filters, and includes via PrepareQueryAsync
         query = await PrepareQueryAsync(query, options, cancellationToken);
 
@@ -289,13 +316,16 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
 
     /// <summary>
     /// Gets multiple entities by IDs with optional query preparation (authorization, includes, filters, etc.).
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public async Task<List<TEntity>> GetByIdsAsync(
-        IQueryable<TEntity> query,
         IEnumerable<TPrimaryKey> ids,
+        IQueryable<TEntity>? query = null,
         QueryOptions<TEntity, TPrimaryKey>? options = null,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
+
         // Apply authorization, filters, and includes via PrepareQueryAsync
         query = await PrepareQueryAsync(query, options, cancellationToken);
 
@@ -307,13 +337,16 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
     /// Gets multiple entities by IDs with optional projection and query preparation.
     /// If options.Selector is null, returns full entities cast to TResult.
     /// If options.Selector is provided, it's applied at the database level for efficient querying.
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public async Task<List<TResult>> GetByIdsAsync<TResult>(
-        IQueryable<TEntity> query,
         IEnumerable<TPrimaryKey> ids,
+        IQueryable<TEntity>? query = null,
         QueryOptions<TEntity, TPrimaryKey, TResult>? options = null,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
+
         // Apply authorization, filters, and includes via PrepareQueryAsync
         query = await PrepareQueryAsync(query, options, cancellationToken);
 
@@ -335,13 +368,16 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
 
     /// <summary>
     /// Checks if an entity with the specified ID exists, with optional query preparation (authorization, filters, etc.).
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public async Task<bool> ExistsAsync(
-        IQueryable<TEntity> query,
         TPrimaryKey id,
+        IQueryable<TEntity>? query = null,
         QueryOptions<TEntity, TPrimaryKey>? options = null,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
+
         // Apply authorization, filters, and includes via PrepareQueryAsync
         query = await PrepareQueryAsync(query, options, cancellationToken);
 
@@ -351,23 +387,28 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
 
     /// <summary>
     /// Checks if any entities match the specified predicate.
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public async Task<bool> AnyAsync(
-        IQueryable<TEntity> query,
         Expression<Func<TEntity, bool>> predicate,
+        IQueryable<TEntity>? query = null,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
         return await query.AnyAsync(predicate, cancellationToken);
     }
 
     /// <summary>
     /// Gets the count of entities with optional query preparation (authorization, filters, etc.).
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public async Task<int> CountAsync(
-        IQueryable<TEntity> query,
+        IQueryable<TEntity>? query = null,
         QueryOptions<TEntity, TPrimaryKey>? options = null,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
+
         // Apply authorization, filters, and includes via PrepareQueryAsync
         query = await PrepareQueryAsync(query, options, cancellationToken);
 
@@ -376,13 +417,16 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
 
     /// <summary>
     /// Gets the first entity matching the predicate, or null if not found, with optional query preparation.
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public async Task<TEntity?> FirstOrDefaultAsync(
-        IQueryable<TEntity> query,
         Expression<Func<TEntity, bool>> predicate,
+        IQueryable<TEntity>? query = null,
         QueryOptions<TEntity, TPrimaryKey>? options = null,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
+
         // Apply authorization, filters, and includes via PrepareQueryAsync
         query = await PrepareQueryAsync(query, options, cancellationToken);
 
@@ -393,13 +437,16 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
     /// Gets the first entity matching the predicate with optional projection, or null if not found.
     /// If options.Selector is null, returns the full entity cast to TResult.
     /// If options.Selector is provided, it's applied at the database level for efficient querying.
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public async Task<TResult?> FirstOrDefaultAsync<TResult>(
-        IQueryable<TEntity> query,
         Expression<Func<TEntity, bool>> predicate,
+        IQueryable<TEntity>? query = null,
         QueryOptions<TEntity, TPrimaryKey, TResult>? options = null,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
+
         // Apply authorization, filters, and includes via PrepareQueryAsync
         query = await PrepareQueryAsync(query, options, cancellationToken);
 
@@ -422,13 +469,16 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
     /// <summary>
     /// Gets the single entity matching the predicate, with optional query preparation.
     /// Throws if zero or more than one entity is found.
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public async Task<TEntity> SingleAsync(
-        IQueryable<TEntity> query,
         Expression<Func<TEntity, bool>> predicate,
+        IQueryable<TEntity>? query = null,
         QueryOptions<TEntity, TPrimaryKey>? options = null,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
+
         // Apply authorization, filters, and includes via PrepareQueryAsync
         query = await PrepareQueryAsync(query, options, cancellationToken);
 
@@ -440,13 +490,16 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
     /// Throws if zero or more than one entity is found.
     /// If options.Selector is null, returns the full entity cast to TResult.
     /// If options.Selector is provided, it's applied at the database level for efficient querying.
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public async Task<TResult> SingleAsync<TResult>(
-        IQueryable<TEntity> query,
         Expression<Func<TEntity, bool>> predicate,
+        IQueryable<TEntity>? query = null,
         QueryOptions<TEntity, TPrimaryKey, TResult>? options = null,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
+
         // Apply authorization, filters, and includes via PrepareQueryAsync
         query = await PrepareQueryAsync(query, options, cancellationToken);
 
@@ -470,13 +523,16 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
     /// Executes a prepared query with optional projection and returns paginated results.
     /// If options.Selector is null, returns full entities cast to TItem (TItem should be TEntity in this case).
     /// If options.Selector is provided, it's applied at the database level for efficient querying.
+    /// If query is null, uses DefaultQuery from DbContext.
     /// </summary>
     public async Task<PaginatedList<TItem>> ExecutePaginatedQueryAsync<TItem>(
-        IQueryable<TEntity> query,
+        IQueryable<TEntity>? query,
         PaginationParameters pagination,
         QueryOptions<TEntity, TPrimaryKey, TItem>? options = null,
         CancellationToken cancellationToken = default)
     {
+        query = GetQuery(query);
+
         // Get total count before pagination
         var totalItems = await query.CountAsync(cancellationToken);
 

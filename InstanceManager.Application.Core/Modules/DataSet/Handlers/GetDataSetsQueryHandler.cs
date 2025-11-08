@@ -20,17 +20,17 @@ public class GetDataSetsQueryHandler : IRequestHandler<GetDataSetsQuery, Paginat
 
     public async Task<PaginatedList<DataSetDto>> Handle(GetDataSetsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.DataSets.AsNoTracking();
-
         // Prepare query options
         var options = new QueryOptions<DataSet, Guid>
         {
+            AsNoTracking = true,
             Filtering = request.Filtering,
             Ordering = request.Ordering,
             IncludeFunc = q => q.Include(ds => ds.Includes)
         };
 
-        query = await _queryService.PrepareQueryAsync(query, options, cancellationToken);
+        // No need to pass query - service uses DefaultQuery with DbContext
+        var query = await _queryService.PrepareQueryAsync(options: options, cancellationToken: cancellationToken);
 
         return await _queryService.ExecutePaginatedQueryAsync<DataSetDto>(
             query,

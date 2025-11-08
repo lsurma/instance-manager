@@ -1,4 +1,5 @@
 using InstanceManager.Application.Contracts.Modules.Translations;
+using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -18,16 +19,16 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
 
     public async Task<Guid> Handle(SaveTranslationCommand request, CancellationToken cancellationToken)
     {
-        Translation translation;
+        Translation? translation;
 
         if (request.Id.HasValue && request.Id.Value != Guid.Empty)
         {
             // Update existing - GetByIdAsync applies authorization automatically
-            // No selector needed - returns full Translation entity
-            translation = await _queryService.GetByIdAsync<Translation>(
-                _context.Translations.AsQueryable(),
+            // No need to pass query - service uses DefaultQuery
+            translation = await _queryService.GetByIdAsync(
                 request.Id.Value,
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken
+            );
 
             if (translation == null)
             {

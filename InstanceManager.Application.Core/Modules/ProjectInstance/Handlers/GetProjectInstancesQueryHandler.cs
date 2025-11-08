@@ -20,16 +20,16 @@ public class GetProjectInstancesQueryHandler : IRequestHandler<GetProjectInstanc
 
     public async Task<PaginatedList<ProjectInstanceDto>> Handle(GetProjectInstancesQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.ProjectInstances.AsNoTracking();
-
         // Prepare query options
         var options = new QueryOptions<ProjectInstance, Guid>
         {
+            AsNoTracking = true,
             Filtering = request.Filtering,
             Ordering = request.Ordering
         };
 
-        query = await _queryService.PrepareQueryAsync(query, options, cancellationToken);
+        // No need to pass query - service uses DefaultQuery with DbContext
+        var query = await _queryService.PrepareQueryAsync(options: options, cancellationToken: cancellationToken);
 
         return await _queryService.ExecutePaginatedQueryAsync<ProjectInstanceDto>(
             query,

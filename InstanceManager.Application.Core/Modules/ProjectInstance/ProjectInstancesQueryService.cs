@@ -1,4 +1,5 @@
 using InstanceManager.Application.Core.Common;
+using InstanceManager.Application.Core.Data;
 
 namespace InstanceManager.Application.Core.Modules.ProjectInstance;
 
@@ -7,8 +8,15 @@ namespace InstanceManager.Application.Core.Modules.ProjectInstance;
 /// </summary>
 public class ProjectInstancesQueryService : QueryService<ProjectInstance, Guid>
 {
-    public ProjectInstancesQueryService(IFilterHandlerRegistry filterHandlerRegistry)
+    private readonly InstanceManagerDbContext _context;
+
+    public ProjectInstancesQueryService(
+        InstanceManagerDbContext context,
+        IFilterHandlerRegistry filterHandlerRegistry)
         : base(filterHandlerRegistry)
     {
+        _context = context;
     }
+
+    protected override IQueryable<ProjectInstance> DefaultQuery => _context.ProjectInstances;
 }
