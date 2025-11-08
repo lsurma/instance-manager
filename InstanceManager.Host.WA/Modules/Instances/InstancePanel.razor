@@ -56,38 +56,11 @@
     </EditForm>
 </FluentDialogBody>
 
-    <FluentDialogFooter>
-        <FluentButton Appearance="Appearance.Accent" 
-                      IconStart="@(Content.IsEditMode ? new Icons.Regular.Size20.Save() : new Icons.Regular.Size20.Add())"
-                      OnClick="@(() => HandleSubmitAsync(closeAfterSave: false))" 
-                      Loading="IsSaving">
-            @(Content.IsEditMode ? "Update" : "Create")
-        </FluentButton>
-        
-        <FluentButton Appearance="Appearance.Neutral" 
-                      IconStart="@(Content.IsEditMode ? new Icons.Regular.Size20.CheckmarkCircle() : new Icons.Regular.Size20.AddCircle())"
-                      OnClick="@(() => HandleSubmitAsync(closeAfterSave: true))" 
-                      Loading="IsSaving">
-            @(Content.IsEditMode ? "Update" : "Create") and Close
-        </FluentButton>
-        
-        <FluentButton Appearance="Appearance.Neutral" 
-                      IconStart="@(new Icons.Regular.Size20.Dismiss())"
-                      OnClick="HandleCancelAsync">
-            Cancel
-        </FluentButton>
-    
-    @if (Content.IsEditMode)
-    {
-        <FluentSpacer />
-        <FluentButton Appearance="Appearance.Accent" 
-                      BackgroundColor="var(--error)"
-                      IconStart="@(new Icons.Regular.Size20.Delete())"
-                      OnClick="HandleDeleteClickAsync"
-                      Disabled="IsSaving"
-                      Loading="IsDeleting">
-            Delete
-        </FluentButton>
-    }
-</FluentDialogFooter>
+    <EntityPanelFooter IsEditMode="@Content.IsEditMode"
+                      IsSaving="@IsSaving"
+                      IsDeleting="@IsDeleting"
+                      OnSave="@(() => HandleSubmitAsync(closeAfterSave: false))"
+                      OnSaveAndClose="@(() => HandleSubmitAsync(closeAfterSave: true))"
+                      OnCancel="@HandleCancelAsync"
+                      OnDelete="@HandleDeleteClickAsync" />
 </FluentKeyCode>

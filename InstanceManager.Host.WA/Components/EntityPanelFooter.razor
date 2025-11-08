@@ -1,0 +1,36 @@
+@* Reusable footer component for entity create/edit panels *@
+
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent"
+                  IconStart="@(IsEditMode ? new Icons.Regular.Size20.Save() : new Icons.Regular.Size20.Add())"
+                  OnClick="HandleSaveClick"
+                  Loading="IsSaving">
+        @(IsEditMode ? SaveButtonText : CreateButtonText)
+    </FluentButton>
+
+    <FluentButton Appearance="Appearance.Neutral"
+                  IconStart="@(IsEditMode ? new Icons.Regular.Size20.CheckmarkCircle() : new Icons.Regular.Size20.AddCircle())"
+                  OnClick="HandleSaveAndCloseClick"
+                  Loading="IsSaving">
+        @(IsEditMode ? SaveAndCloseButtonText : CreateAndCloseButtonText)
+    </FluentButton>
+
+    <FluentButton Appearance="Appearance.Neutral"
+                  IconStart="@(new Icons.Regular.Size20.Dismiss())"
+                  OnClick="HandleCancelClick">
+        @CancelButtonText
+    </FluentButton>
+
+    @if (ShouldShowDeleteButton)
+    {
+        <FluentSpacer />
+        <FluentButton Appearance="Appearance.Accent"
+                      BackgroundColor="var(--error)"
+                      IconStart="@(new Icons.Regular.Size20.Delete())"
+                      OnClick="HandleDeleteClick"
+                      Disabled="IsSaving"
+                      Loading="IsDeleting">
+            @DeleteButtonText
+        </FluentButton>
+    }
+</FluentDialogFooter>
