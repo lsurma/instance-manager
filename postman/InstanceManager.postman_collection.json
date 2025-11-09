@@ -1,0 +1,727 @@
+{
+	"info": {
+		"_postman_id": "instancemanager-api-001",
+		"name": "InstanceManager API",
+		"description": "Collection for testing InstanceManager API with authentication scenarios",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:7233/api",
+			"type": "string"
+		},
+		{
+			"key": "apiKey",
+			"value": "dev-key-12345",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "noauth"
+	},
+	"item": [
+		{
+			"name": "ProjectInstances",
+			"item": [
+				{
+					"name": "Get All Project Instances",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetProjectInstancesQuery",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetProjectInstancesQuery"]
+						},
+						"description": "Retrieves all project instances without any filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project Instances (Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetProjectInstancesQuery?body={{paginationBody}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetProjectInstancesQuery"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{{paginationBody}}",
+									"description": "URL-encoded JSON with pagination parameters"
+								}
+							]
+						},
+						"description": "Retrieves project instances with pagination, ordering, and filtering"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project Instance By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetProjectInstanceByIdQuery?body={\"id\":\"{{instanceId}}\"}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetProjectInstanceByIdQuery"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{\"id\":\"{{instanceId}}\"}"
+								}
+							]
+						},
+						"description": "Retrieves a single project instance by its ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Project Instance",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/SaveProjectInstanceCommand?body={\"name\":\"Test Instance\",\"description\":\"Created from Postman\",\"mainHost\":\"test.example.com\"}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "SaveProjectInstanceCommand"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{\"name\":\"Test Instance\",\"description\":\"Created from Postman\",\"mainHost\":\"test.example.com\"}"
+								}
+							]
+						},
+						"description": "Creates a new project instance"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Project Instance",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/SaveProjectInstanceCommand?body={\"id\":\"{{instanceId}}\",\"name\":\"Updated Instance\",\"description\":\"Updated from Postman\",\"mainHost\":\"updated.example.com\"}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "SaveProjectInstanceCommand"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{\"id\":\"{{instanceId}}\",\"name\":\"Updated Instance\",\"description\":\"Updated from Postman\",\"mainHost\":\"updated.example.com\"}"
+								}
+							]
+						},
+						"description": "Updates an existing project instance"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Project Instance",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/DeleteProjectInstanceCommand?body={\"id\":\"{{instanceId}}\"}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "DeleteProjectInstanceCommand"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{\"id\":\"{{instanceId}}\"}"
+								}
+							]
+						},
+						"description": "Deletes a project instance by ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Translations",
+			"item": [
+				{
+					"name": "Get All Translations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetTranslationsQuery",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetTranslationsQuery"]
+						},
+						"description": "Retrieves all translations"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Translations (With Filters)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetTranslationsQuery?body={\"filtering\":{\"queryFilters\":[{\"filterType\":\"CultureFilter\",\"value\":\"en-US\"}]},\"pagination\":{\"page\":1,\"pageSize\":10}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetTranslationsQuery"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{\"filtering\":{\"queryFilters\":[{\"filterType\":\"CultureFilter\",\"value\":\"en-US\"}]},\"pagination\":{\"page\":1,\"pageSize\":10}}"
+								}
+							]
+						},
+						"description": "Retrieves translations with culture filter and pagination"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Translation By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetTranslationByIdQuery?body={\"id\":\"{{translationId}}\"}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetTranslationByIdQuery"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{\"id\":\"{{translationId}}\"}"
+								}
+							]
+						},
+						"description": "Retrieves a single translation by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Translation",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/SaveTranslationCommand?body={\"key\":\"greeting.hello\",\"value\":\"Hello World\",\"culture\":\"en-US\"}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "SaveTranslationCommand"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{\"key\":\"greeting.hello\",\"value\":\"Hello World\",\"culture\":\"en-US\"}"
+								}
+							]
+						},
+						"description": "Creates a new translation"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Translation",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/DeleteTranslationCommand?body={\"id\":\"{{translationId}}\"}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "DeleteTranslationCommand"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{\"id\":\"{{translationId}}\"}"
+								}
+							]
+						},
+						"description": "Deletes a translation by ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "DataSets",
+			"item": [
+				{
+					"name": "Get All DataSets",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetDataSetsQuery",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetDataSetsQuery"]
+						},
+						"description": "Retrieves all data sets"
+					},
+					"response": []
+				},
+				{
+					"name": "Get DataSets (Paginated & Searched)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetDataSetsQuery?body={\"filtering\":{\"searchTerm\":\"prod\"},\"pagination\":{\"page\":1,\"pageSize\":10},\"ordering\":{\"orderBy\":\"name\",\"orderDirection\":\"asc\"}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetDataSetsQuery"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{\"filtering\":{\"searchTerm\":\"prod\"},\"pagination\":{\"page\":1,\"pageSize\":10},\"ordering\":{\"orderBy\":\"name\",\"orderDirection\":\"asc\"}}"
+								}
+							]
+						},
+						"description": "Retrieves data sets with search term, pagination, and ordering"
+					},
+					"response": []
+				},
+				{
+					"name": "Get DataSet By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetDataSetByIdQuery?body={\"id\":\"{{dataSetId}}\"}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetDataSetByIdQuery"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{\"id\":\"{{dataSetId}}\"}"
+								}
+							]
+						},
+						"description": "Retrieves a single data set by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Create DataSet",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/SaveDataSetCommand?body={\"name\":\"Production Dataset\",\"description\":\"Main production data\"}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "SaveDataSetCommand"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{\"name\":\"Production Dataset\",\"description\":\"Main production data\"}"
+								}
+							]
+						},
+						"description": "Creates a new data set"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete DataSet",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/query/DeleteDataSetCommand?body={\"id\":\"{{dataSetId}}\"}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "DeleteDataSetCommand"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{\"id\":\"{{dataSetId}}\"}"
+								}
+							]
+						},
+						"description": "Deletes a data set by ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "With API Key Auth",
+			"item": [
+				{
+					"name": "Get Project Instances (API Key)",
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "{{apiKey}}",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "X-API-Key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetProjectInstancesQuery",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetProjectInstancesQuery"]
+						},
+						"description": "Example request with API Key authentication"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Translations (API Key)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetTranslationsQuery",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetTranslationsQuery"]
+						},
+						"description": "Example request with API Key authentication"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "With JWT Auth",
+			"item": [
+				{
+					"name": "Get Project Instances (JWT)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetProjectInstancesQuery",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetProjectInstancesQuery"]
+						},
+						"description": "Example request with JWT Bearer token authentication"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Translations (JWT)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetTranslationsQuery",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetTranslationsQuery"]
+						},
+						"description": "Example request with JWT Bearer token authentication"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "With APIM Simulation",
+			"item": [
+				{
+					"name": "Get Project Instances (APIM)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-APIM-Secret",
+								"value": "{{apimSecret}}",
+								"type": "text",
+								"description": "Shared secret between APIM and backend"
+							},
+							{
+								"key": "X-User-Id",
+								"value": "{{apimUserId}}",
+								"type": "text",
+								"description": "User identifier forwarded from APIM"
+							},
+							{
+								"key": "X-User-Name",
+								"value": "{{apimUserName}}",
+								"type": "text",
+								"description": "User display name forwarded from APIM"
+							},
+							{
+								"key": "X-User-Email",
+								"value": "{{apimUserEmail}}",
+								"type": "text",
+								"description": "User email forwarded from APIM"
+							},
+							{
+								"key": "X-Subscription-Name",
+								"value": "{{apimSubscriptionName}}",
+								"type": "text",
+								"description": "APIM subscription name"
+							},
+							{
+								"key": "X-Subscription-Id",
+								"value": "{{apimSubscriptionId}}",
+								"type": "text",
+								"description": "APIM subscription ID"
+							},
+							{
+								"key": "X-Auth-Method",
+								"value": "{{apimAuthMethod}}",
+								"type": "text",
+								"description": "Original authentication method used at APIM"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetProjectInstancesQuery",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetProjectInstancesQuery"]
+						},
+						"description": "Example request simulating APIM gateway forwarding user headers to backend. The X-APIM-Secret validates this is a trusted APIM request."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Project Instance (APIM as Alice)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-APIM-Secret",
+								"value": "{{apimSecret}}",
+								"type": "text"
+							},
+							{
+								"key": "X-User-Id",
+								"value": "alice@example.com",
+								"type": "text"
+							},
+							{
+								"key": "X-User-Name",
+								"value": "Alice Johnson",
+								"type": "text"
+							},
+							{
+								"key": "X-User-Email",
+								"value": "alice@example.com",
+								"type": "text"
+							},
+							{
+								"key": "X-Subscription-Name",
+								"value": "AliceSubscription",
+								"type": "text"
+							},
+							{
+								"key": "X-Auth-Method",
+								"value": "JWT",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/query/SaveProjectInstanceCommand?body={\"name\":\"Alice's Project via APIM\",\"description\":\"Created through APIM\"}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "SaveProjectInstanceCommand"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{\"name\":\"Alice's Project via APIM\",\"description\":\"Created through APIM\"}"
+								}
+							]
+						},
+						"description": "Create a project instance as Alice through APIM. CreatedBy will be 'alice@example.com'."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Project Instance (APIM as Bob)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-APIM-Secret",
+								"value": "{{apimSecret}}",
+								"type": "text"
+							},
+							{
+								"key": "X-User-Id",
+								"value": "bob@example.com",
+								"type": "text"
+							},
+							{
+								"key": "X-User-Name",
+								"value": "Bob Smith",
+								"type": "text"
+							},
+							{
+								"key": "X-User-Email",
+								"value": "bob@example.com",
+								"type": "text"
+							},
+							{
+								"key": "X-Subscription-Name",
+								"value": "BobSubscription",
+								"type": "text"
+							},
+							{
+								"key": "X-Auth-Method",
+								"value": "ApiKey",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/query/SaveProjectInstanceCommand?body={\"name\":\"Bob's Project via APIM\",\"description\":\"Created through APIM\"}",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "SaveProjectInstanceCommand"],
+							"query": [
+								{
+									"key": "body",
+									"value": "{\"name\":\"Bob's Project via APIM\",\"description\":\"Created through APIM\"}"
+								}
+							]
+						},
+						"description": "Create a project instance as Bob through APIM. CreatedBy will be 'bob@example.com'. Note the original auth method was ApiKey."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Translations (APIM)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-APIM-Secret",
+								"value": "{{apimSecret}}",
+								"type": "text"
+							},
+							{
+								"key": "X-User-Id",
+								"value": "{{apimUserId}}",
+								"type": "text"
+							},
+							{
+								"key": "X-User-Name",
+								"value": "{{apimUserName}}",
+								"type": "text"
+							},
+							{
+								"key": "X-User-Email",
+								"value": "{{apimUserEmail}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Subscription-Name",
+								"value": "{{apimSubscriptionName}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Auth-Method",
+								"value": "{{apimAuthMethod}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetTranslationsQuery",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetTranslationsQuery"]
+						},
+						"description": "Get translations through APIM simulation"
+					},
+					"response": []
+				},
+				{
+					"name": "Test Without APIM Secret (Should Fail)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-Id",
+								"value": "hacker@evil.com",
+								"type": "text"
+							},
+							{
+								"key": "X-User-Name",
+								"value": "Hacker",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetProjectInstancesQuery",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetProjectInstancesQuery"]
+						},
+						"description": "This request intentionally omits the X-APIM-Secret header to verify security. Should return 401 Unauthorized when APIM trust is enabled with RequireSharedSecret: true."
+					},
+					"response": []
+				},
+				{
+					"name": "Test Invalid APIM Secret (Should Fail)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-APIM-Secret",
+								"value": "wrong-secret-12345",
+								"type": "text"
+							},
+							{
+								"key": "X-User-Id",
+								"value": "hacker@evil.com",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/query/GetProjectInstancesQuery",
+							"host": ["{{baseUrl}}"],
+							"path": ["query", "GetProjectInstancesQuery"]
+						},
+						"description": "This request uses an invalid APIM secret. Should return 401 Unauthorized."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
