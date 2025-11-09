@@ -1,0 +1,1 @@
+﻿- postman rejestracja ladne okienka
