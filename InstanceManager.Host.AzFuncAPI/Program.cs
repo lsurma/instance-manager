@@ -17,6 +17,9 @@ var builder = FunctionsApplication.CreateBuilder(args);
 builder.ConfigureFunctionsWebApplication()
     .UseMiddleware<ApimBypassMiddleware>();
 
+// Add HTTP context accessor for user identity tracking
+builder.Services.AddHttpContextAccessor();
+
 // Add database
 var connectionString = builder.Configuration.GetConnectionString("InstanceManagerDb")
     ?? "Data Source=db/instanceManager.db";

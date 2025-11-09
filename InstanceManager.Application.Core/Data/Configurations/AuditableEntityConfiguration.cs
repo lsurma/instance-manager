@@ -13,14 +13,17 @@ public abstract class AuditableEntityConfiguration<TEntity> : IEntityTypeConfigu
 
         builder.Property(e => e.CreatedBy)
             .IsRequired()
-            .HasMaxLength(100);
-        
+            .HasMaxLength(256);
+
+        builder.Property(e => e.UpdatedBy)
+            .HasMaxLength(256);
+
         // SQLite workaround: Store DateTimeOffset as UTC ticks for proper sorting/filtering
         builder.Property(e => e.CreatedAt)
             .HasConversion(
                 v => v.UtcDateTime.Ticks,
                 v => new DateTimeOffset(v, TimeSpan.Zero));
-        
+
         builder.Property(e => e.UpdatedAt)
             .HasConversion(
                 v => v.HasValue ? v.Value.UtcDateTime.Ticks : (long?)null,

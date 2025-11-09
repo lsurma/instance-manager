@@ -3,6 +3,7 @@ using System;
 using InstanceManager.Application.Core.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InstanceManager.Application.Core.Data.Migrations
 {
     [DbContext(typeof(InstanceManagerDbContext))]
-    partial class InstanceManagerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251109120258_user_tracking")]
+    partial class user_tracking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.8");

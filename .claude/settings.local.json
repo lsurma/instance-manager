@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(dotnet build:*)",
-      "Bash(dotnet --list-sdks:*)"
+      "Bash(dotnet --list-sdks:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(dotnet restore:*)"
     ],
     "deny": [],
     "ask": []

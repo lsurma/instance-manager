@@ -140,7 +140,7 @@ else if (Data != null)
             _hasLoadedOnce = true;
 
             // Fetch fresh data from API
-            var freshData = await RequestSender.SendAsync<TResponse>(Query);
+            var freshData = await RequestSender.SendAsync<TResponse>(Query!);
 
             // Update cache if caching is enabled
             if (shouldUseCache)

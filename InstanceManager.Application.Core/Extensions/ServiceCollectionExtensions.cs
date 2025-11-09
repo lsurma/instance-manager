@@ -1,4 +1,5 @@
 using System.Reflection;
+using InstanceManager.Application.Contracts.Common;
 using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
 using InstanceManager.Application.Core.Modules.DataSet;
@@ -16,7 +17,15 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<InstanceManagerDbContext>(options =>
             options.UseSqlite(connectionString));
 
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly));
+        // Register MediatR with logging pipeline behavior
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly);
+            cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+        });
+
+        // Register current user service
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         // Register authorization service (mock for now)
         services.AddScoped<IAuthorizationService, MockAuthorizationService>();

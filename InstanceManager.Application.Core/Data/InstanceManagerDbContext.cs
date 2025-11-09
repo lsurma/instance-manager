@@ -1,3 +1,4 @@
+using InstanceManager.Application.Contracts.Common;
 using InstanceManager.Application.Core.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -6,8 +7,13 @@ namespace InstanceManager.Application.Core.Data;
 
 public class InstanceManagerDbContext : DbContext
 {
-    public InstanceManagerDbContext(DbContextOptions<InstanceManagerDbContext> options) : base(options)
+    private readonly ICurrentUserService? _currentUserService;
+
+    public InstanceManagerDbContext(
+        DbContextOptions<InstanceManagerDbContext> options,
+        ICurrentUserService? currentUserService = null) : base(options)
     {
+        _currentUserService = currentUserService;
     }
 
     public DbSet<Modules.ProjectInstance.ProjectInstance> ProjectInstances { get; set; }
@@ -31,17 +37,19 @@ public class InstanceManagerDbContext : DbContext
     private void SetAuditFields()
     {
         var entries = ChangeTracker.Entries<IAuditableEntity>();
+        var currentUserId = _currentUserService?.GetUserId() ?? "system";
 
         foreach (var entry in entries)
         {
             if (entry.State == EntityState.Added)
             {
                 entry.Entity.CreatedAt = DateTimeOffset.UtcNow;
-                entry.Entity.CreatedBy = "system"; // TODO: Replace with actual user context
+                entry.Entity.CreatedBy = currentUserId;
             }
             else if (entry.State == EntityState.Modified)
             {
                 entry.Entity.UpdatedAt = DateTimeOffset.UtcNow;
+                entry.Entity.UpdatedBy = currentUserId;
             }
         }
     }

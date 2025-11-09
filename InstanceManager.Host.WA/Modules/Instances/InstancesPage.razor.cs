@@ -156,16 +156,16 @@ public partial class InstancesPage : ComponentBase, IDisposable
         }
     }
 
-    private async void SelectedItemChanged(ITreeViewItem? item)
+    private void SelectedItemChanged(ITreeViewItem? item)
     {
         // Only process if FluentTree is active
         if (_renderMode != RenderMode.FluentTree)
         {
             return;
         }
-        
+
         var idInUrl = NavHelper.GetQueryParameter("id");
-        
+
         if (item != null && Guid.TryParse(item.Id, out var instanceId))
         {
             // Update URL with instance ID

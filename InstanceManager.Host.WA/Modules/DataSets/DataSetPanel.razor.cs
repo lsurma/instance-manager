@@ -28,13 +28,15 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
     private string? ErrorMessage { get; set; }
     private HashSet<Guid> SelectedIncludeIds { get; set; } = new();
     
-    protected override void OnInitialized()
+    protected override Task OnInitializedAsync()
     {
         // Initialize selected includes from the DataSet
         if (Content?.DataSet?.IncludedDataSetIds != null)
         {
             SelectedIncludeIds = new HashSet<Guid>(Content.DataSet.IncludedDataSetIds);
         }
+
+        return Task.CompletedTask;
     }
     
     private void HandleIncludeChanged(Guid dataSetId, bool isSelected)
