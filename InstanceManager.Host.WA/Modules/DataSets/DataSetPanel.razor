@@ -2,7 +2,6 @@
 @using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
 @implements IDialogContentComponent<DataSetPanelParameters>
 
-<FluentKeyCode Only="@([KeyCode.Ctrl, KeyCode.KeyS])" OnKeyDown="@HandleKeyDownAsync">
 <FluentDialogBody>
     <EditForm Model="Content.DataSet" OnSubmit="@(() => HandleSubmitAsync(false))">
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
@@ -53,11 +52,11 @@
     </EditForm>
 </FluentDialogBody>
 
+
     <EntityPanelFooter IsEditMode="@Content.IsEditMode"
-                      IsSaving="@IsSaving"
-                      IsDeleting="@IsDeleting"
-                      OnSave="@(() => HandleSubmitAsync(closeAfterSave: false))"
-                      OnSaveAndClose="@(() => HandleSubmitAsync(closeAfterSave: true))"
-                      OnCancel="@HandleCancelAsync"
-                      OnDelete="@HandleDeleteClickAsync" />
-</FluentKeyCode>
+                       IsSaving="@IsSaving"
+                       IsDeleting="@IsDeleting"
+                       OnSave="@(() => HandleSubmitAsync(closeAfterSave: false))"
+                       OnSaveAndClose="@(() => HandleSubmitAsync(closeAfterSave: true))"
+                       OnCancel="@HandleCancelAsync"
+                       OnDelete="@HandleDeleteClickAsync" />

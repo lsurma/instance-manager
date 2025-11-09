@@ -1,5 +1,6 @@
 ﻿using InstanceManager.Host.AzFuncAPI.Services;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -22,6 +23,11 @@ public class QueryController
         _requestRegistry = requestRegistry;
     }
 
+    /// <summary>
+    /// Main query endpoint that routes MediatR requests.
+    /// Authentication is handled by the authorization middleware.
+    /// Supports both JWT Bearer tokens (Authorization: Bearer {token}) and API Keys (X-API-Key: {key}).
+    /// </summary>
     [Function("Query")]
     public async Task<IActionResult> Query(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "query/{requestName}")] HttpRequest req,

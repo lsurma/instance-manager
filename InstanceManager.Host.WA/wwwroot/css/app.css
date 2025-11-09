@@ -123,11 +123,20 @@ code {
 }
 
 /* Fix for Fluent UI panel positioning - allow clicking through the positioning region */
-fluent-dialog[id^="panel-"] {
+fluent-dialog[id^="panel-"][class~="right"] {
     &::part(positioning-region) {
         width: var(--dialog-width);
         left: auto;
-        right : 0;    
+        right : 16px;
+        top : 16px;
+        height: calc(100dvh - 32px);
+    }
+
+    &::part(control) {
+        background: #FFF;
+        border-radius: 8px;
+        box-shadow: 0 0 8px rgba(0,0,0,0.12), 0 32px 64px rgba(0,0,0,0.14);
+        --dialog-height: calc(100dvh - 32px);
     }
 }
 
