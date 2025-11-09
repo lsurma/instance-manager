@@ -14,8 +14,27 @@ using Microsoft.Identity.Web;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
-builder.ConfigureFunctionsWebApplication()
-    .UseMiddleware<ApimBypassMiddleware>();
+// Load authentication settings first (needed for middleware configuration)
+var authSettings = builder.Configuration.GetSection(AuthenticationSettings.SectionName).Get<AuthenticationSettings>()
+    ?? new AuthenticationSettings();
+
+// Store settings for use in middleware and services
+builder.Services.AddSingleton(authSettings);
+
+// Configure Functions Web Application with middleware pipeline
+var functionsBuilder = builder.ConfigureFunctionsWebApplication();
+
+// Add middleware to the pipeline
+functionsBuilder.UseWhen<ApimBypassMiddleware>(context =>
+{
+    // Only run APIM bypass middleware if APIM trust is enabled
+    var services = context.InstanceServices;
+    var settings = services.GetRequiredService<AuthenticationSettings>();
+    return settings.Apim.TrustApim;
+});
+
+// Always add authorization middleware
+functionsBuilder.UseMiddleware<FunctionsAuthorizationMiddleware>();
 
 // Add HTTP context accessor for user identity tracking
 builder.Services.AddHttpContextAccessor();
@@ -28,10 +47,6 @@ builder.Services.AddInstanceManagerCore(connectionString);
 builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
     .ConfigureFunctionsApplicationInsights();
-
-// Configure authentication
-var authSettings = builder.Configuration.GetSection(AuthenticationSettings.SectionName).Get<AuthenticationSettings>()
-    ?? new AuthenticationSettings();
 
 // Add authentication services
 var authBuilder = builder.Services.AddAuthentication(options =>
@@ -101,8 +116,7 @@ builder.Services.AddAuthorization(options =>
               .AddAuthenticationSchemes(ApiKeyAuthenticationOptions.DefaultScheme, JwtBearerDefaults.AuthenticationScheme));
 });
 
-// Store settings for later use
-builder.Services.AddSingleton(authSettings);
+// Note: authSettings already registered earlier (line 35)
 
 // Find all IRequest from contracts assembly
 builder.Services.AddSingleton<RequestRegistry>();
