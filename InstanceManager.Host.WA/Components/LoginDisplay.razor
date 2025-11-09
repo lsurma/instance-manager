@@ -1,0 +1,28 @@
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@inject NavigationManager Navigation
+
+<AuthorizeView>
+    <Authorized>
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.End">
+            <FluentLabel>Hello, @context.User.Identity?.Name!</FluentLabel>
+            <FluentButton Appearance="Appearance.Lightweight" OnClick="BeginSignOut">Log out</FluentButton>
+        </FluentStack>
+    </Authorized>
+    <NotAuthorized>
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.End">
+            <FluentButton Appearance="Appearance.Accent" OnClick="BeginSignIn">Log in</FluentButton>
+        </FluentStack>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private void BeginSignOut()
+    {
+        Navigation.NavigateToLogout("authentication/logout");
+    }
+
+    private void BeginSignIn()
+    {
+        Navigation.NavigateTo("authentication/login");
+    }
+}

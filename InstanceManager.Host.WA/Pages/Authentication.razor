@@ -1,0 +1,50 @@
+@page "/authentication/{action}"
+@attribute [AllowAnonymous]
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+
+<RemoteAuthenticatorView Action="@Action">
+    <LoggingIn>
+        <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
+            <FluentProgressRing />
+            <FluentLabel Typo="Typography.Body">Logging in...</FluentLabel>
+        </FluentStack>
+    </LoggingIn>
+    <CompletingLoggingIn>
+        <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
+            <FluentProgressRing />
+            <FluentLabel Typo="Typography.Body">Completing login...</FluentLabel>
+        </FluentStack>
+    </CompletingLoggingIn>
+    <LogOut>
+        <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
+            <FluentProgressRing />
+            <FluentLabel Typo="Typography.Body">Logging out...</FluentLabel>
+        </FluentStack>
+    </LogOut>
+    <CompletingLogOut>
+        <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
+            <FluentProgressRing />
+            <FluentLabel Typo="Typography.Body">Completing logout...</FluentLabel>
+        </FluentStack>
+    </CompletingLogOut>
+    <LogOutSucceeded>
+        <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
+            <FluentLabel Typo="Typography.H4">You have been successfully logged out.</FluentLabel>
+            <FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/"))">Return to Home</FluentButton>
+        </FluentStack>
+    </LogOutSucceeded>
+    <LogOutFailed>
+        <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
+            <FluentLabel Typo="Typography.H4" Color="Color.Error">Logout failed.</FluentLabel>
+            <FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/"))">Return to Home</FluentButton>
+        </FluentStack>
+    </LogOutFailed>
+</RemoteAuthenticatorView>
+
+@code {
+    [Parameter]
+    public string? Action { get; set; }
+
+    [Inject]
+    public NavigationManager Navigation { get; set; } = default!;
+}
