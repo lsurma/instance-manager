@@ -5,8 +5,10 @@ using InstanceManager.Host.AzFuncAPI.Authentication;
 using InstanceManager.Host.AzFuncAPI.Middleware;
 using InstanceManager.Host.AzFuncAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
+using Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,19 +24,18 @@ var authSettings = builder.Configuration.GetSection(AuthenticationSettings.Secti
 builder.Services.AddSingleton(authSettings);
 
 // Configure Functions Web Application with middleware pipeline
-var functionsBuilder = builder.ConfigureFunctionsWebApplication();
+var functionsApp = builder.ConfigureFunctionsWebApplication();
 
-// Add middleware to the pipeline
-functionsBuilder.UseWhen<ApimBypassMiddleware>(context =>
+// Add APIM bypass middleware (Functions Worker middleware)
+functionsApp.UseWhen<ApimBypassMiddleware>(context =>
 {
-    // Only run APIM bypass middleware if APIM trust is enabled
     var services = context.InstanceServices;
     var settings = services.GetRequiredService<AuthenticationSettings>();
     return settings.Apim.TrustApim;
 });
 
-// Always add authorization middleware
-functionsBuilder.UseMiddleware<FunctionsAuthorizationMiddleware>();
+// Add authorization middleware (Functions Worker middleware)
+functionsApp.UseMiddleware<FunctionsAuthorizationMiddleware>();
 
 // Add HTTP context accessor for user identity tracking
 builder.Services.AddHttpContextAccessor();
@@ -92,14 +93,7 @@ if (authSettings.ApiKeys.Enabled && authSettings.ApiKeys.Keys.Any())
 // Add authorization
 builder.Services.AddAuthorization(options =>
 {
-    // Default policy - require authentication if enabled (unless APIM bypass is active)
-    if (authSettings.RequireAuthentication && !authSettings.Apim.TrustApim)
-    {
-        options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-            .RequireAuthenticatedUser()
-            .Build();
-    }
-
+    
     // Policy for API Key authentication
     options.AddPolicy("ApiKeyPolicy", policy =>
         policy.RequireAuthenticatedUser()
@@ -114,6 +108,13 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("ApiOrJwtPolicy", policy =>
         policy.RequireAuthenticatedUser()
               .AddAuthenticationSchemes(ApiKeyAuthenticationOptions.DefaultScheme, JwtBearerDefaults.AuthenticationScheme));
+    
+    // Default policy - require authentication if enabled (unless APIM bypass is active)
+    if (authSettings.RequireAuthentication && !authSettings.Apim.TrustApim)
+    {
+        options.FallbackPolicy = options.GetPolicy("ApiOrJwtPolicy")!;
+        options.DefaultPolicy = options.GetPolicy("ApiOrJwtPolicy")!;
+    }
 });
 
 // Note: authSettings already registered earlier (line 35)

@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 
 namespace InstanceManager.Host.AzFuncAPI.Controllers;
 
+[Authorize]
 public class QueryController
 {
     private readonly ILogger<QueryController> _logger;

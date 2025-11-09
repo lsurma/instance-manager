@@ -1,5 +1,7 @@
 using System.Net;
 using InstanceManager.Host.AzFuncAPI.Authentication;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -57,13 +59,48 @@ public class FunctionsAuthorizationMiddleware : IFunctionsWorkerMiddleware
             return;
         }
 
+        // IMPORTANT: Manually trigger authentication since ASP.NET Core middleware may not run automatically
+        // Try API Key authentication first if enabled
+        AuthenticateResult? authenticateResult = null;
+
+        if (_authSettings.ApiKeys.Enabled)
+        {
+            authenticateResult = await httpContext.AuthenticateAsync(ApiKeyAuthenticationOptions.DefaultScheme);
+            _logger.LogDebug("API Key authentication result: Success={Success}", authenticateResult.Succeeded);
+
+            // CRITICAL: Set the HttpContext.User from the authentication result
+            if (authenticateResult.Succeeded && authenticateResult.Principal != null)
+            {
+                httpContext.User = authenticateResult.Principal;
+                _logger.LogDebug("Set HttpContext.User from API Key authentication");
+            }
+        }
+
+        // If API Key failed and JWT is enabled, try JWT
+        if ((authenticateResult == null || !authenticateResult.Succeeded) && _authSettings.EntraId.Enabled)
+        {
+            authenticateResult = await httpContext.AuthenticateAsync(JwtBearerDefaults.AuthenticationScheme);
+            _logger.LogDebug("JWT authentication result: Success={Success}", authenticateResult?.Succeeded);
+
+            // CRITICAL: Set the HttpContext.User from the authentication result
+            if (authenticateResult?.Succeeded == true && authenticateResult.Principal != null)
+            {
+                httpContext.User = authenticateResult.Principal;
+                _logger.LogDebug("Set HttpContext.User from JWT authentication");
+            }
+        }
+
         // Check if user is authenticated
         var isAuthenticated = httpContext.User.Identity?.IsAuthenticated ?? false;
         var userName = httpContext.User.Identity?.Name ?? "anonymous";
 
+        _logger.LogDebug("Final authentication status: IsAuthenticated={IsAuthenticated}, UserName={UserName}",
+            isAuthenticated, userName);
+
         if (!isAuthenticated)
         {
-            _logger.LogWarning("Unauthorized request | User not authenticated");
+            _logger.LogWarning("Unauthorized request | User not authenticated | Headers: {Headers}",
+                string.Join(", ", httpContext.Request.Headers.Select(h => $"{h.Key}={h.Value}")));
 
             // Return 401 Unauthorized response
             var response = httpRequestData.CreateResponse(HttpStatusCode.Unauthorized);
