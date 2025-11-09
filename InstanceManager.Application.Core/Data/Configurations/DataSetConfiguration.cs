@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -15,6 +16,14 @@ public class DataSetConfiguration : AuditableEntityConfiguration<Modules.DataSet
             .HasMaxLength(1000);
 
         builder.Property(e => e.Notes);
+
+        // Store AllowedIdentityIds as JSON in SQLite
+        builder.Property(e => e.AllowedIdentityIds)
+            .HasConversion(
+                v => string.Join(',', v),
+                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+            )
+            .HasColumnType("TEXT");
 
         // Configure many-to-many relationship through DataSetInclude
         builder.HasMany(e => e.Includes)

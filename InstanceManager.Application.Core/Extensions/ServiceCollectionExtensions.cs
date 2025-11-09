@@ -12,7 +12,10 @@ namespace InstanceManager.Application.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddInstanceManagerCore(this IServiceCollection services, string connectionString)
+    public static IServiceCollection AddInstanceManagerCore(
+        this IServiceCollection services,
+        string connectionString,
+        Action<AuthorizationOptions>? configureAuthorization = null)
     {
         services.AddDbContext<InstanceManagerDbContext>(options =>
             options.UseSqlite(connectionString));
@@ -24,18 +27,25 @@ public static class ServiceCollectionExtensions
             cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
         });
 
+        // Register user context (populated by middleware in Azure Functions)
+        services.AddScoped<UserContext>();
+
         // Register current user service
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-        // Register authorization service (mock for now)
-        services.AddScoped<IAuthorizationService, MockAuthorizationService>();
+        // Register authorization service with options
+        var authOptions = new AuthorizationOptions();
+        configureAuthorization?.Invoke(authOptions);
+        services.AddSingleton(authOptions);
+        services.AddScoped<IAuthorizationService, AuthorizationService>();
 
         // Register entity-specific query services
         services.AddScoped<IQueryService<DataSet, Guid>, DataSetsQueryService>();
         services.AddScoped<IQueryService<ProjectInstance, Guid>, ProjectInstancesQueryService>();
         services.AddScoped<IQueryService<Translation, Guid>, TranslationsQueryService>();
 
-        // Also register TranslationsQueryService directly for injection when needed
+        // Also register specialized query services directly for injection when needed
+        services.AddScoped<DataSetsQueryService>();
         services.AddScoped<TranslationsQueryService>();
 
         services.AddSingleton<IFilterHandlerRegistry, FilterHandlerRegistry>();

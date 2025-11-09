@@ -1,4 +1,5 @@
 using System.Net;
+using InstanceManager.Application.Core.Common;
 using InstanceManager.Host.AzFuncAPI.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace InstanceManager.Host.AzFuncAPI.Middleware;
@@ -13,6 +15,7 @@ namespace InstanceManager.Host.AzFuncAPI.Middleware;
 /// <summary>
 /// Middleware that enforces authentication for Azure Functions based on configuration.
 /// This bridges the gap between Azure Functions and ASP.NET Core authorization.
+/// Also populates the UserContext for reliable user identity access.
 /// </summary>
 public class FunctionsAuthorizationMiddleware : IFunctionsWorkerMiddleware
 {
@@ -38,16 +41,28 @@ public class FunctionsAuthorizationMiddleware : IFunctionsWorkerMiddleware
             return;
         }
 
+        // Get HttpContext from ASP.NET Core integration
+        var httpContext = context.GetHttpContext();
+
+        // Get UserContext from DI to populate for downstream services
+        var userContext = context.InstanceServices.GetService<UserContext>();
+
         // Skip authentication check if not required or APIM bypass is active
         if (!_authSettings.RequireAuthentication || _authSettings.Apim.TrustApim)
         {
             _logger.LogDebug("Authentication not required or APIM bypass active");
+
+            // Still try to populate UserContext if HttpContext is available
+            if (httpContext != null && userContext != null)
+            {
+                userContext.User = httpContext.User ?? new System.Security.Claims.ClaimsPrincipal();
+                _logger.LogDebug("Populated UserContext (no auth required mode)");
+            }
+
             await next(context);
             return;
         }
 
-        // Get HttpContext from ASP.NET Core integration
-        var httpContext = context.GetHttpContext();
         if (httpContext == null)
         {
             _logger.LogWarning("HttpContext is null - unable to perform authorization");
@@ -88,6 +103,14 @@ public class FunctionsAuthorizationMiddleware : IFunctionsWorkerMiddleware
                 httpContext.User = authenticateResult.Principal;
                 _logger.LogDebug("Set HttpContext.User from JWT authentication");
             }
+        }
+
+        // Populate UserContext with the authenticated user (if available)
+        // This is more reliable than IHttpContextAccessor in Azure Functions
+        if (userContext != null && httpContext.User != null)
+        {
+            userContext.User = httpContext.User;
+            _logger.LogDebug("Populated UserContext with ClaimsPrincipal");
         }
 
         // Check if user is authenticated

@@ -70,9 +70,9 @@ public class ApiKeySettings
     public bool Enabled { get; set; } = false;
 
     /// <summary>
-    /// Dictionary of API keys (Key: Name/Description, Value: API Key)
+    /// List of valid API keys. The key itself is used as the identity.
     /// </summary>
-    public Dictionary<string, string> Keys { get; set; } = new();
+    public List<string> Keys { get; set; } = new();
 }
 
 /// <summary>

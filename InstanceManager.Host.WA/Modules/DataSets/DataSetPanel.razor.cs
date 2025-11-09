@@ -27,7 +27,8 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
     private bool IsDeleting { get; set; }
     private string? ErrorMessage { get; set; }
     private HashSet<Guid> SelectedIncludeIds { get; set; } = new();
-    
+    private string AllowedIdentityIdsText { get; set; } = string.Empty;
+
     protected override Task OnInitializedAsync()
     {
         // Initialize selected includes from the DataSet
@@ -36,7 +37,34 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
             SelectedIncludeIds = new HashSet<Guid>(Content.DataSet.IncludedDataSetIds);
         }
 
+        // Initialize AllowedIdentityIds text from DataSet
+        if (Content?.DataSet?.AllowedIdentityIds != null && Content.DataSet.AllowedIdentityIds.Any())
+        {
+            AllowedIdentityIdsText = string.Join(Environment.NewLine, Content.DataSet.AllowedIdentityIds);
+        }
+
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Parses the AllowedIdentityIdsText into a list of trimmed, non-empty identity IDs.
+    /// Supports newlines, semicolons, and commas as separators.
+    /// </summary>
+    private List<string> ParseAllowedIdentityIds()
+    {
+        if (string.IsNullOrWhiteSpace(AllowedIdentityIdsText))
+        {
+            return new List<string>();
+        }
+
+        var separators = new[] { '\n', '\r', ';', ',' };
+
+        return AllowedIdentityIdsText
+            .Split(separators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id.Trim())
+            .Distinct()
+            .ToList();
     }
     
     private void HandleIncludeChanged(Guid dataSetId, bool isSelected)
@@ -75,6 +103,7 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
                 Name = Content.DataSet.Name,
                 Description = Content.DataSet.Description,
                 Notes = Content.DataSet.Notes,
+                AllowedIdentityIds = ParseAllowedIdentityIds(),
                 IncludedDataSetIds = SelectedIncludeIds.ToList()
             });
             

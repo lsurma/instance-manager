@@ -23,7 +23,8 @@
                             Immediate="true"
                             Rows="4"
                             Style="width: 100%;" />
-            
+
+
             @if (Content.AvailableDataSets.Any())
             {
                 <div>
@@ -40,6 +41,18 @@
                     </FluentStack>
                 </div>
             }
+            
+            <FluentTextArea @bind-Value="AllowedIdentityIdsText"
+                            Immediate="true"
+                            Rows="4"
+                            Style="width: 100%;">
+                <FluentLabel>
+                    Allowed Identity IDs (Optional)
+                    <span style="font-size: 12px; color: var(--neutral-foreground-rest); font-weight: normal;">
+                        <br/>Enter user/application IDs that can access this DataSet. Separate with new lines, commas, or semicolons. Leave empty for public access.
+                    </span>
+                </FluentLabel>
+            </FluentTextArea>
             
             @if (!string.IsNullOrEmpty(ErrorMessage))
             {

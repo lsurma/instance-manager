@@ -33,13 +33,19 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
         CancellationToken cancellationToken = default)
     {
         // Get accessible dataset IDs from authorization service
-        var accessibleDataSetIds = await _authorizationService.GetAccessibleDataSetIdsAsync(cancellationToken);
+        var (allAccessible, accessibleIds) = await _authorizationService.GetAccessibleDataSetIdsAsync(cancellationToken);
 
-        if (accessibleDataSetIds.Any())
+        // If user has access to all datasets, no filtering needed
+        if (allAccessible)
+        {
+            return query;
+        }
+
+        if (accessibleIds.Any())
         {
             // User has access to specific datasets - filter by those
             // Note: DataSetId is nullable, so we need to handle that
-            query = query.Where(t => t.DataSetId.HasValue && accessibleDataSetIds.Contains(t.DataSetId.Value));
+            query = query.Where(t => t.DataSetId.HasValue && accessibleIds.Contains(t.DataSetId.Value));
         }
         else
         {

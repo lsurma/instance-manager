@@ -12,6 +12,7 @@ public static class DataSetMappingExtensions
             Name = dataSet.Name,
             Description = dataSet.Description,
             Notes = dataSet.Notes,
+            AllowedIdentityIds = dataSet.AllowedIdentityIds.ToList(),
             IncludedDataSetIds = dataSet.Includes.Select(i => i.IncludedDataSetId).ToList(),
             CreatedAt = dataSet.CreatedAt,
             UpdatedAt = dataSet.UpdatedAt,

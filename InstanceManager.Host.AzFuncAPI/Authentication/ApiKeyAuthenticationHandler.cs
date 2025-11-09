@@ -44,12 +44,13 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
         }
 
         // Create claims for the authenticated user
+        // Use the API key itself as the identity name
         var claims = new[]
         {
-            new Claim(ClaimTypes.Name, keyName ?? "API"),
-            new Claim(ClaimTypes.NameIdentifier, providedApiKey),
+            new Claim(ClaimTypes.Name, keyName),
+            new Claim(ClaimTypes.NameIdentifier, keyName),
             new Claim("ApiKey", providedApiKey),
-            new Claim("KeyName", keyName ?? "Unknown")
+            new Claim("KeyName", keyName)
         };
 
         var identity = new ClaimsIdentity(claims, Scheme.Name);
@@ -61,25 +62,19 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
 
     /// <summary>
     /// Validates the provided API key against configured keys.
+    /// The API key itself is used as the identity name.
     /// </summary>
-    private bool IsValidApiKey(string providedApiKey, out string? keyName)
+    private bool IsValidApiKey(string providedApiKey, out string keyName)
     {
-        keyName = null;
+        keyName = providedApiKey;
 
         if (Options.ApiKeys == null || !Options.ApiKeys.Any())
         {
             return false;
         }
 
-        var matchingKey = Options.ApiKeys.FirstOrDefault(k => k.Value == providedApiKey);
-
-        if (matchingKey.Value == null)
-        {
-            return false;
-        }
-
-        keyName = matchingKey.Key;
-        return true;
+        // Check if the provided API key exists in the list
+        return Options.ApiKeys.Contains(providedApiKey);
     }
 }
 
@@ -91,7 +86,7 @@ public class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
     public const string DefaultScheme = "ApiKey";
 
     /// <summary>
-    /// Dictionary of API keys (Key: Name, Value: API Key)
+    /// List of valid API keys. The key itself is used as the identity.
     /// </summary>
-    public Dictionary<string, string> ApiKeys { get; set; } = new();
+    public List<string> ApiKeys { get; set; } = new();
 }

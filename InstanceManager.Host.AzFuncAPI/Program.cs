@@ -43,7 +43,22 @@ builder.Services.AddHttpContextAccessor();
 // Add database
 var connectionString = builder.Configuration.GetConnectionString("InstanceManagerDb")
     ?? "Data Source=db/instanceManager.db";
-builder.Services.AddInstanceManagerCore(connectionString);
+builder.Services.AddInstanceManagerCore(connectionString, authOptions =>
+{
+    // Configure root users from configuration or environment
+    var rootUsers = builder.Configuration.GetSection("Authorization:RootUsers").Get<string[]>();
+    if (rootUsers != null)
+    {
+        foreach (var userId in rootUsers)
+        {
+            authOptions.AddRootUser(userId);
+        }
+    }
+
+    // For development, you can also hard-code root users here:
+    // authOptions.AddRootUser("admin@example.com");
+    // authOptions.AddRootUser("api-key-admin");
+});
 
 builder.Services
     .AddApplicationInsightsTelemetryWorkerService()

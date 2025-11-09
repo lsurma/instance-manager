@@ -5,20 +5,30 @@ using Microsoft.AspNetCore.Http;
 namespace InstanceManager.Application.Core.Common;
 
 /// <summary>
-/// Implementation of ICurrentUserService that extracts user identity from HTTP context.
+/// Implementation of ICurrentUserService that extracts user identity from HTTP context or UserContext.
 /// Supports JWT, API Key, and APIM authentication methods.
+/// In Azure Functions, UserContext is more reliable than IHttpContextAccessor.
 /// </summary>
 public class CurrentUserService : ICurrentUserService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly UserContext _userContext;
 
-    public CurrentUserService(IHttpContextAccessor httpContextAccessor)
+    public CurrentUserService(IHttpContextAccessor httpContextAccessor, UserContext userContext)
     {
         _httpContextAccessor = httpContextAccessor;
+        _userContext = userContext;
     }
 
     public UserIdentity GetCurrentUser()
     {
+        // Try UserContext first (more reliable in Azure Functions)
+        if (_userContext.HasUser)
+        {
+            return ExtractUserIdentityFromPrincipal(_userContext.User!, httpContext: null);
+        }
+
+        // Fallback to HttpContext if UserContext is not populated
         var httpContext = _httpContextAccessor.HttpContext;
 
         // If no HTTP context (e.g., background jobs), return system identity
@@ -27,8 +37,14 @@ public class CurrentUserService : ICurrentUserService
             return UserIdentity.System();
         }
 
-        var user = httpContext.User;
+        return ExtractUserIdentityFromPrincipal(httpContext.User, httpContext);
+    }
 
+    /// <summary>
+    /// Extracts UserIdentity from a ClaimsPrincipal
+    /// </summary>
+    private UserIdentity ExtractUserIdentityFromPrincipal(ClaimsPrincipal user, HttpContext? httpContext)
+    {
         // If not authenticated, return anonymous
         if (user?.Identity?.IsAuthenticated != true)
         {
@@ -156,35 +172,38 @@ public class CurrentUserService : ICurrentUserService
     /// <summary>
     /// Extracts user identity from APIM gateway headers
     /// </summary>
-    private UserIdentity ExtractApimIdentity(ClaimsPrincipal user, HttpContext httpContext)
+    private UserIdentity ExtractApimIdentity(ClaimsPrincipal user, HttpContext? httpContext)
     {
         // APIM can forward user identity via headers
-        var userId = httpContext.Request.Headers["X-User-Id"].FirstOrDefault()
+        var userId = httpContext?.Request.Headers["X-User-Id"].FirstOrDefault()
             ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? "apim-gateway";
 
-        var displayName = httpContext.Request.Headers["X-User-Name"].FirstOrDefault()
-            ?? httpContext.Request.Headers["X-User-Email"].FirstOrDefault()
+        var displayName = httpContext?.Request.Headers["X-User-Name"].FirstOrDefault()
+            ?? httpContext?.Request.Headers["X-User-Email"].FirstOrDefault()
             ?? user.FindFirst(ClaimTypes.Name)?.Value;
 
-        var email = httpContext.Request.Headers["X-User-Email"].FirstOrDefault()
+        var email = httpContext?.Request.Headers["X-User-Email"].FirstOrDefault()
             ?? user.FindFirst(ClaimTypes.Email)?.Value;
 
         var additionalClaims = new Dictionary<string, string>();
 
-        // Capture APIM-specific headers
-        var subscriptionName = httpContext.Request.Headers["X-Subscription-Name"].FirstOrDefault();
-        var subscriptionId = httpContext.Request.Headers["X-Subscription-Id"].FirstOrDefault();
-        var authMethod = httpContext.Request.Headers["X-Auth-Method"].FirstOrDefault();
+        // Capture APIM-specific headers if httpContext is available
+        if (httpContext != null)
+        {
+            var subscriptionName = httpContext.Request.Headers["X-Subscription-Name"].FirstOrDefault();
+            var subscriptionId = httpContext.Request.Headers["X-Subscription-Id"].FirstOrDefault();
+            var authMethod = httpContext.Request.Headers["X-Auth-Method"].FirstOrDefault();
 
-        if (!string.IsNullOrWhiteSpace(subscriptionName))
-            additionalClaims["SubscriptionName"] = subscriptionName;
+            if (!string.IsNullOrWhiteSpace(subscriptionName))
+                additionalClaims["SubscriptionName"] = subscriptionName;
 
-        if (!string.IsNullOrWhiteSpace(subscriptionId))
-            additionalClaims["SubscriptionId"] = subscriptionId;
+            if (!string.IsNullOrWhiteSpace(subscriptionId))
+                additionalClaims["SubscriptionId"] = subscriptionId;
 
-        if (!string.IsNullOrWhiteSpace(authMethod))
-            additionalClaims["OriginalAuthMethod"] = authMethod;
+            if (!string.IsNullOrWhiteSpace(authMethod))
+                additionalClaims["OriginalAuthMethod"] = authMethod;
+        }
 
         return new UserIdentity
         {
