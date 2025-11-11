@@ -1,4 +1,4 @@
-using InstanceManager.Application.Contracts.Common;
+using InstanceManager.Authentication.Core;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

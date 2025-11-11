@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using InstanceManager.Application.Contracts.Common;
+using InstanceManager.Authentication.Core;
 using Microsoft.AspNetCore.Http;
 
 namespace InstanceManager.Application.Core.Common;
