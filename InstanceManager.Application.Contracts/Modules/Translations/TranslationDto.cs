@@ -1,6 +1,6 @@
 namespace InstanceManager.Application.Contracts.Modules.Translations;
 
-public record TranslationDto
+public record TranslationDto : ITranslationDto
 {
     public Guid Id { get; set; }
 
