@@ -12,18 +12,45 @@ The generic query system consists of:
 
 1. **`ITranslationDto`** - Marker interface in `Application.Contracts` that all translation projection DTOs must implement
 2. **`GetTranslationsQuery<TProjection> where TProjection : ITranslationDto`** - Generic query in `Application.Contracts`
-3. **`ITranslationProjectionMapper<TProjection> where TProjection : ITranslationDto`** - Mapper interface in `Application.Core`
+3. **`TranslationProjections`** - Static class in `Application.Core` containing selector expressions for each projection type
 4. **`GetTranslationsQueryHandler<TProjection> where TProjection : ITranslationDto`** - Generic handler in `Application.Core`
-5. **Auto-registration** - Projection mappers are automatically discovered and registered via reflection
 
 The `ITranslationDto` constraint ensures that MediatR only registers handlers for valid translation projections, preventing unnecessary type registrations.
 
+### Why Static Methods Instead of Dynamic Expression Building?
+
+The key requirement is that EF Core must be able to translate your projection expressions to SQL. When you try to build expressions dynamically at runtime using `Expression.Convert`, `Expression.Invoke`, or `Expression.Constant`, you create expression trees that EF Core cannot translate.
+
+**This FAILS** (EF Core cannot translate):
+```csharp
+var expr = (Translation t) => new TranslationDto { ... };
+var cast = Expression.Convert(
+    Expression.Invoke(Expression.Constant(expr), ...),
+    typeof(TProjection)
+);
+var exprT = Expression.Lambda<Func<Translation, TProjection>>(cast, ...);
+```
+
+**This WORKS** (EF Core can translate):
+```csharp
+// Define selector as a static method that returns the expression directly
+public static Expression<Func<Translation, TranslationDto>> ToTranslationDto()
+{
+    return t => new TranslationDto { ... };
+}
+
+// Use it via cast (no dynamic expression building)
+var selector = (Expression<Func<Translation, TProjection>>)TranslationProjections.GetSelectorFor(typeof(TProjection));
+```
+
+The static method approach works because the actual expression (`t => new TranslationDto { ... }`) is created at compile time and is a proper expression tree that EF Core understands. The cast simply reinterprets the type at the C# level without modifying the expression tree.
+
 ## How It Works
 
-1. MediatR automatically registers the generic handler `GetTranslationsQueryHandler<TProjection>`
-2. When you create a query with a specific projection type (e.g., `GetTranslationsQuery<SimpleTranslationDto>`), MediatR creates a concrete instance of the handler for that type
-3. The handler injects the corresponding `ITranslationProjectionMapper<TProjection>` mapper
-4. The mapper provides a `Selector` expression that EF Core uses for database-level projection
+1. MediatR automatically registers the generic handler `GetTranslationsQueryHandler<TProjection>` (because `RegisterGenericHandlers = true`)
+2. When you send a query with a specific projection type (e.g., `GetTranslationsQuery<SimpleTranslationDto>`), MediatR creates a concrete instance of the handler for that type
+3. The handler calls `TranslationProjections.GetSelectorFor(typeof(TProjection))` to get the appropriate selector expression
+4. The selector expression is used by EF Core for database-level projection to SQL
 
 ## Creating a Custom Projection
 
@@ -44,18 +71,18 @@ public record MyCustomTranslationDto : ITranslationDto
 }
 ```
 
-### Step 2: Create a Projection Mapper (in Application.Core)
+### Step 2: Add a Static Selector Method (in TranslationProjections.cs)
 
 ```csharp
-// InstanceManager.Application.Core/Modules/Translations/Mappers/MyCustomTranslationMapper.cs
-using System.Linq.Expressions;
-using InstanceManager.Application.Contracts.Modules.Translations;
-
-namespace InstanceManager.Application.Core.Modules.Translations.Mappers;
-
-public class MyCustomTranslationMapper : ITranslationProjectionMapper<MyCustomTranslationDto>
+// InstanceManager.Application.Core/Modules/Translations/TranslationProjections.cs
+public static class TranslationProjections
 {
-    public Expression<Func<Translation, MyCustomTranslationDto>> GetSelector()
+    // ... existing methods ...
+
+    /// <summary>
+    /// My custom projection
+    /// </summary>
+    public static Expression<Func<Translation, MyCustomTranslationDto>> ToMyCustomTranslationDto()
     {
         return t => new MyCustomTranslationDto
         {
@@ -64,10 +91,32 @@ public class MyCustomTranslationMapper : ITranslationProjectionMapper<MyCustomTr
             Content = t.Content
         };
     }
+
+    public static object? GetSelectorFor(Type projectionType)
+    {
+        if (projectionType == typeof(TranslationDto))
+        {
+            return ToTranslationDto();
+        }
+
+        if (projectionType == typeof(SimpleTranslationDto))
+        {
+            return ToSimpleTranslationDto();
+        }
+
+        // ADD YOUR NEW PROJECTION HERE
+        if (projectionType == typeof(MyCustomTranslationDto))
+        {
+            return ToMyCustomTranslationDto();
+        }
+
+        throw new NotSupportedException($"No projection selector defined for type {projectionType.Name}. " +
+                                       $"Add a static method to TranslationProjections class.");
+    }
 }
 ```
 
-That's it! The mapper will be automatically discovered and registered.
+That's it! No registration needed - just add the static method and the case in `GetSelectorFor`.
 
 ### Step 3: Use the Query
 
@@ -116,24 +165,29 @@ public class MyHandler
 }
 ```
 
-## Example Projection: SimpleTranslationDto
+## Example Projections
 
-The solution includes an example projection `SimpleTranslationDto` with its mapper:
+The solution includes two example projections in `TranslationProjections.cs`:
 
-- **DTO**: `InstanceManager.Application.Contracts/Modules/Translations/SimpleTranslationDto.cs`
-- **Mapper**: `InstanceManager.Application.Core/Modules/Translations/Mappers/SimpleTranslationMapper.cs`
+1. **`ToTranslationDto()`** - Full projection with all fields
+2. **`ToSimpleTranslationDto()`** - Lightweight projection with only 4 essential fields (Id, TranslationName, CultureName, Content)
 
-This demonstrates how to create a lightweight projection with only essential fields.
+Files:
+- **DTOs**: `InstanceManager.Application.Contracts/Modules/Translations/TranslationDto.cs` and `SimpleTranslationDto.cs`
+- **Selectors**: `InstanceManager.Application.Core/Modules/Translations/TranslationProjections.cs`
+
+This demonstrates how to create projections with different field sets.
 
 ## Benefits
 
 1. **Performance** - Only select the fields you need, reducing data transfer
 2. **Database-level projection** - The selector expression is translated to SQL by EF Core
 3. **Type-safe** - Full compile-time type checking with generic constraints
-4. **Automatic registration** - No manual service registration needed
+4. **Simple** - Just add a static method and a case in `GetSelectorFor` - no interfaces or complex registration
 5. **Reusable** - Define projections once, use them anywhere
 6. **Supports all query features** - Filtering, ordering, pagination, and authorization all work automatically
-7. **Constrained generics** - The `ITranslationDto` constraint prevents MediatR from attempting to register handlers for every possible type, improving startup performance and clarity
+7. **Constrained generics** - The `ITranslationDto` constraint prevents MediatR from attempting to register handlers for every possible type, improving startup performance
+8. **EF Core compatible** - Uses compile-time expressions that EF Core can translate, avoiding runtime expression building issues
 
 ## Advanced Usage
 
@@ -176,10 +230,29 @@ var result = await RequestSender.SendAsync(query);
 ## Implementation Details
 
 - **MediatR**: Automatically registers `GetTranslationsQueryHandler<TProjection>` as an open generic (requires `RegisterGenericHandlers = true` in MediatR configuration)
-- **Service Registration**: `RegisterProjectionMappers()` in `ServiceCollectionExtensions.cs` automatically discovers and registers all `ITranslationProjectionMapper<>` implementations
+- **Static Selectors**: `TranslationProjections` class contains static methods that return compile-time expression trees
+- **Type Resolution**: Handler uses `GetSelectorFor(Type)` to get the appropriate selector based on `TProjection`
 - **Query Service**: Uses the existing `TranslationsQueryService` for authorization, filtering, and ordering
-- **EF Core**: The selector expression is translated to SQL for optimal performance
-- **Generic Constraint**: The `where TProjection : ITranslationDto` constraint on the query, handler, and mapper interface ensures only valid translation projections are used
+- **EF Core**: The selector expression is a proper compile-time expression tree that EF Core can translate to SQL
+- **Generic Constraint**: The `where TProjection : ITranslationDto` constraint ensures only valid translation projections are used
+
+### How Generic Types are Serialized Over HTTP
+
+The system handles generic types through a custom serialization format:
+
+1. **Frontend (HttpRequestSender)**:
+   - Detects if the request type is generic (e.g., `GetTranslationsQuery<SimpleTranslationDto>`)
+   - Formats it as: `GetTranslationsQuery<SimpleTranslationDto>`
+   - Sends this as the URL parameter: `/api/query/GetTranslationsQuery<SimpleTranslationDto>?body={...}`
+
+2. **Backend (RequestRegistry)**:
+   - Parses the request name format: `TypeName<GenericArg>`
+   - Looks up the open generic type definition: `GetTranslationsQuery<>`
+   - Resolves the generic argument type from the Contracts assembly: `SimpleTranslationDto`
+   - Constructs the closed generic type: `GetTranslationsQuery<SimpleTranslationDto>`
+   - Returns this type to the QueryController for deserialization
+
+This approach allows the dynamic request routing system to work seamlessly with generic types without requiring explicit endpoint registration.
 
 ## Troubleshooting
 
@@ -194,9 +267,19 @@ public record MyDto : ITranslationDto { ... }
 ### "No handler found for GetTranslationsQuery<MyDto>"
 
 Ensure you have:
-1. Created a mapper implementing `ITranslationProjectionMapper<MyDto>`
-2. The mapper is in the `InstanceManager.Application.Core` assembly (so reflection can find it)
+1. Added a static method to `TranslationProjections` that returns `Expression<Func<Translation, MyDto>>`
+2. Added the corresponding case in `GetSelectorFor(Type)` method
 3. MediatR configuration has `RegisterGenericHandlers = true`
+
+### "No projection selector defined for type MyDto"
+
+You forgot to add the case in `GetSelectorFor(Type)`. Add:
+```csharp
+if (projectionType == typeof(MyDto))
+{
+    return ToMyDto();
+}
+```
 
 ## Creating Projections for Other Entities
 

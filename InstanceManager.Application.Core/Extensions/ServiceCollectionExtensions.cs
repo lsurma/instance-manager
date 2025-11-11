@@ -1,4 +1,5 @@
 using System.Reflection;
+using InstanceManager.Application.Contracts;
 using InstanceManager.Authentication.Core;
 using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
@@ -24,6 +25,7 @@ public static class ServiceCollectionExtensions
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly);
+            cfg.RegisterServicesFromAssembly(typeof(IRequestSender).Assembly);
             cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
             cfg.RegisterGenericHandlers = true;
         });
@@ -54,8 +56,6 @@ public static class ServiceCollectionExtensions
         // Register all filter handlers
         RegisterFilterHandlers(services);
 
-        // Register all projection mappers
-        RegisterProjectionMappers(services);
 
         return services;
     }
@@ -76,31 +76,6 @@ public static class ServiceCollectionExtensions
         foreach (var handlerType in handlerTypes)
         {
             services.AddScoped(handlerType);
-        }
-    }
-
-    private static void RegisterProjectionMappers(IServiceCollection services)
-    {
-        var assembly = typeof(ServiceCollectionExtensions).Assembly;
-        var projectionMapperType = typeof(Modules.Translations.ITranslationProjectionMapper<>);
-
-        // Find all types that implement ITranslationProjectionMapper<TProjection>
-        var mapperTypes = assembly.GetTypes()
-            .Where(t => !t.IsInterface && !t.IsAbstract)
-            .Where(t => t.GetInterfaces().Any(i =>
-                i.IsGenericType &&
-                i.GetGenericTypeDefinition() == projectionMapperType))
-            .ToList();
-
-        foreach (var mapperType in mapperTypes)
-        {
-            // Get the interface this mapper implements
-            var implementedInterface = mapperType.GetInterfaces()
-                .First(i => i.IsGenericType &&
-                           i.GetGenericTypeDefinition() == projectionMapperType);
-
-            // Register: ITranslationProjectionMapper<TProjection> -> ConcreteMapper
-            services.AddScoped(implementedInterface, mapperType);
         }
     }
 

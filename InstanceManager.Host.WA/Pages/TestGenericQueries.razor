@@ -1,0 +1,121 @@
+@page "/test-generic-queries"
+@using InstanceManager.Application.Contracts
+@using InstanceManager.Application.Contracts.Common
+@using InstanceManager.Application.Contracts.Modules.Translations
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<PageTitle>Test Generic Queries</PageTitle>
+
+<h1>Test Generic Translation Queries</h1>
+
+<p>This page tests the generic query pattern with different projection types.</p>
+
+<div style="margin: 20px 0; display: flex; gap: 10px;">
+    <FluentButton Appearance="Appearance.Accent" @onclick="LoadFullTranslations">
+        Load Full Translations (TranslationDto)
+    </FluentButton>
+
+    <FluentButton Appearance="Appearance.Accent" @onclick="LoadSimpleTranslations">
+        Load Simple Translations (SimpleTranslationDto)
+    </FluentButton>
+</div>
+
+@if (isLoading)
+{
+    <FluentProgressRing />
+    <p>Loading...</p>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <FluentMessageBar Intent="MessageIntent.Error">
+        @errorMessage
+    </FluentMessageBar>
+}
+
+<h3>Results:</h3>
+<textarea style="width:100%; height:500px; font-family: monospace;">@resultJson</textarea>
+
+@code {
+    [Inject]
+    protected IRequestSender RequestSender { get; set; } = null!;
+
+    private string resultJson = string.Empty;
+    private bool isLoading = false;
+    private string errorMessage = string.Empty;
+
+    private async Task LoadFullTranslations()
+    {
+        await ExecuteQuery(async () =>
+        {
+            // Query with full TranslationDto projection
+            var query = new GetTranslationsQuery<TranslationDto>
+            {
+                Pagination = new PaginationParameters { PageNumber = 1, PageSize = 10 },
+                Ordering = new OrderingParameters { OrderBy = "TranslationName" }
+            };
+
+            var result = await RequestSender.SendAsync(query);
+            return new
+            {
+                QueryType = "GetTranslationsQuery<TranslationDto>",
+                TotalItems = result.TotalItems,
+                TotalPages = result.TotalPages,
+                PageSize = result.PageSize,
+                CurrentPage = result.CurrentPage,
+                Items = result.Items
+            };
+        });
+    }
+
+    private async Task LoadSimpleTranslations()
+    {
+        await ExecuteQuery(async () =>
+        {
+            // Query with lightweight SimpleTranslationDto projection
+            var query = new GetTranslationsQuery<SimpleTranslationDto>
+            {
+                Pagination = new PaginationParameters { PageNumber = 1, PageSize = 10 },
+                Ordering = new OrderingParameters { OrderBy = "TranslationName" }
+            };
+
+            var result = await RequestSender.SendAsync(query);
+            return new
+            {
+                QueryType = "GetTranslationsQuery<SimpleTranslationDto>",
+                TotalItems = result.TotalItems,
+                TotalPages = result.TotalPages,
+                PageSize = result.PageSize,
+                CurrentPage = result.CurrentPage,
+                Items = result.Items
+            };
+        });
+    }
+
+    private async Task ExecuteQuery(Func<Task<object>> queryAction)
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        resultJson = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            var result = await queryAction();
+            resultJson = System.Text.Json.JsonSerializer.Serialize(result, new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}\n\nStack Trace:\n{ex.StackTrace}";
+            resultJson = string.Empty;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

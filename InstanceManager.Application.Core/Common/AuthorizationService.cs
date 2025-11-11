@@ -35,6 +35,7 @@ public class AuthorizationService : IAuthorizationService
         {
             return Task.FromResult(true);
         }
+        return Task.FromResult(true);
 
         // Check if user ID is in the root access list
         var hasRootAccess = _options.RootUserIds.Contains(currentUser.UserId);

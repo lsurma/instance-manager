@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using InstanceManager.Application.Contracts.Common;
 using InstanceManager.Application.Contracts.Modules.Translations;
 using InstanceManager.Application.Core.Common;
@@ -13,25 +14,25 @@ public class GetTranslationsQueryHandler<TProjection> : IRequestHandler<GetTrans
     where TProjection : ITranslationDto
 {
     private readonly TranslationsQueryService _queryService;
-    private readonly ITranslationProjectionMapper<TProjection> _mapper;
 
-    public GetTranslationsQueryHandler(
-        TranslationsQueryService queryService,
-        ITranslationProjectionMapper<TProjection> mapper)
+    public GetTranslationsQueryHandler(TranslationsQueryService queryService)
     {
         _queryService = queryService;
-        _mapper = mapper;
     }
 
     public async Task<PaginatedList<TProjection>> Handle(GetTranslationsQuery<TProjection> request, CancellationToken cancellationToken)
     {
-        // Create complete query specification with projection from mapper
+        // Get the selector for this projection type from the static class
+        var selectorObject = TranslationProjections.GetSelectorFor(typeof(TProjection));
+        var selector = (Expression<Func<Translation, TProjection>>)selectorObject!;
+
+        // Create complete query specification with projection
         var options = new QueryOptions<Translation, Guid, TProjection>
         {
             AsNoTracking = true,
             Filtering = request.Filtering,
             Ordering = request.Ordering,
-            Selector = _mapper.GetSelector()
+            Selector = selector
         };
 
         // Apply query preparation (authorization, filters, ordering)

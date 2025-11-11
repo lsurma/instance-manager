@@ -1,8 +1,11 @@
 using InstanceManager.Authentication.Core.Authentication;
 using InstanceManager.Authentication.Core.Middleware;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+namespace InstanceManager.Authentication.Core;
 
 public static class FunctionsWorkerApplicationBuilderExtensions
 {
