@@ -8,6 +8,7 @@ using Microsoft.FluentUI.AspNetCore.Components;
 using Radzen;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -26,7 +27,7 @@ builder.Services.AddMsalAuthentication(options =>
 {
     builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
     options.ProviderOptions.LoginMode = "redirect";
-
+    
     // Add default scopes for API access
     var defaultScopes = builder.Configuration.GetSection("AzureAd:DefaultScopes").Get<string[]>();
     if (defaultScopes != null)
@@ -38,15 +39,25 @@ builder.Services.AddMsalAuthentication(options =>
     }
 });
 
+
 // Configure HttpClient to use the API base URL from configuration
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:7233/api/";
+var scopes = builder.Configuration.GetSection("AzureAd:DefaultScopes").Get<string[]>();
 
-// Register InstanceManagerHttpClient as Typed Client
-builder.Services.AddHttpClient<InstanceManagerHttpClient>(client => client.BaseAddress = new Uri(apiBaseUrl))
-    .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
+// Configure ApiAuthorizationMessageHandler for external API
+builder.Services.AddScoped(sp => new ApiAuthorizationMessageHandler(
+    sp.GetRequiredService<IAccessTokenProvider>(),
+    sp.GetRequiredService<NavigationManager>(),
+    apiBaseUrl,
+    scopes
+));
 
-// Configure BaseAddressAuthorizationMessageHandler to attach access tokens
-builder.Services.AddScoped<BaseAddressAuthorizationMessageHandler>();
+// Register InstanceManagerHttpClient as Typed Client with ApiAuthorizationMessageHandler
+builder.Services.AddHttpClient<InstanceManagerHttpClient>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<ApiAuthorizationMessageHandler>();
+
 
 
 builder.Services.AddScoped<IRequestSender, HttpRequestSender>();
