@@ -40,14 +40,14 @@ builder.Services.AddMsalAuthentication(options =>
 
 // Configure HttpClient to use the API base URL from configuration
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:7233/api/";
-builder.Services.AddHttpClient("InstanceManager.API", client => client.BaseAddress = new Uri(apiBaseUrl))
+
+// Register InstanceManagerHttpClient as Typed Client
+builder.Services.AddHttpClient<InstanceManagerHttpClient>(client => client.BaseAddress = new Uri(apiBaseUrl))
     .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
 
 // Configure BaseAddressAuthorizationMessageHandler to attach access tokens
 builder.Services.AddScoped<BaseAddressAuthorizationMessageHandler>();
 
-// Add default HttpClient for backward compatibility
-builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("InstanceManager.API"));
 
 builder.Services.AddScoped<IRequestSender, HttpRequestSender>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();

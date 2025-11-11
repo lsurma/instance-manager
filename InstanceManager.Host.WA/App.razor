@@ -1,5 +1,6 @@
 ﻿@using InstanceManager.Host.WA.Layout
 @using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@using Microsoft.AspNetCore.Components.Authorization
 
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
@@ -8,16 +9,11 @@
                 <NotAuthorized>
                     @if (context.User.Identity?.IsAuthenticated != true)
                     {
-                        <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
-                            <FluentLabel Typo="Typography.H4">You need to log in to access this page.</FluentLabel>
-                            <FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("authentication/login"))">Log in</FluentButton>
-                        </FluentStack>
+                        <RedirectToLogin />
                     }
                     else
                     {
-                        <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
-                            <FluentLabel Typo="Typography.H4" Color="Color.Error">You are not authorized to access this page.</FluentLabel>
-                        </FluentStack>
+                        <p role="alert">You are not authorized to access this resource.</p>
                     }
                 </NotAuthorized>
             </AuthorizeRouteView>
@@ -33,3 +29,24 @@
 </CascadingAuthenticationState>
 
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@code {
+    private bool isRedirecting = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUri = Navigation.Uri;
+        var isAuthenticationPage = currentUri.Contains("authentication");
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState?.User?.Identity?.IsAuthenticated != true && !isAuthenticationPage)
+        {
+            Navigation.NavigateTo("authentication/login", replace: true);
+        }
+        else
+        {
+            isRedirecting = false;
+        }
+    }
+}

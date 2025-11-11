@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Net.Http.Json;
 using InstanceManager.Application.Contracts;
 using MediatR;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
@@ -8,12 +7,13 @@ namespace InstanceManager.Host.WA.DAL;
 
 public class HttpRequestSender : IRequestSender
 {
-    private readonly HttpClient _httpClient;
+    private readonly InstanceManagerHttpClient _httpClient;
 
-    public HttpRequestSender(HttpClient httpClient)
+    public HttpRequestSender(InstanceManagerHttpClient httpClient)
     {
-        // HttpClient is configured with BaseAddressAuthorizationMessageHandler
-        // which automatically attaches access tokens to API requests
+        // HttpClient wrapper that uses the named 'InstanceManager.API' client
+        // which is configured with BaseAddressAuthorizationMessageHandler
+        // that automatically attaches access tokens to API requests
         _httpClient = httpClient;
     }
 
@@ -25,7 +25,7 @@ public class HttpRequestSender : IRequestSender
 
         try
         {
-            var data = await _httpClient.GetFromJsonAsync<TResponse>($"query/{requestName}?body={urlEncodedRequest}", cancellationToken);
+            var data = await _httpClient.GetAsync<TResponse>($"query/{requestName}?body={urlEncodedRequest}", cancellationToken);
             return data!;
         }
         catch (AccessTokenNotAvailableException exception)
