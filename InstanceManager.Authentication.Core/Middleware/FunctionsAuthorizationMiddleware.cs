@@ -1,16 +1,17 @@
 using System.Net;
-using InstanceManager.Application.Core.Common;
-using InstanceManager.Host.AzFuncAPI.Authentication;
+using InstanceManager.Authentication.Core;
+using InstanceManager.Authentication.Core.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace InstanceManager.Host.AzFuncAPI.Middleware;
+namespace InstanceManager.Authentication.Core.Middleware;
 
 /// <summary>
 /// Middleware that enforces authentication for Azure Functions based on configuration.
