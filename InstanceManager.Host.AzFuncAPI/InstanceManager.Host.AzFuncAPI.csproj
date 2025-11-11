@@ -13,8 +13,8 @@
         <PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.23.0" />
         <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.0.0" />
         <PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.0.0" />
-        <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="2.0.2" />
-        <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.5" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="2.0.0" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -25,6 +25,7 @@
     <ItemGroup>
       <ProjectReference Include="..\InstanceManager.Application.Contracts\InstanceManager.Application.Contracts.csproj" />
       <ProjectReference Include="..\InstanceManager.Application.Core\InstanceManager.Application.Core.csproj" />
+      <ProjectReference Include="..\InstanceManager.Authentication.Core\InstanceManager.Authentication.Core.csproj" />
     </ItemGroup>
 
 </Project>

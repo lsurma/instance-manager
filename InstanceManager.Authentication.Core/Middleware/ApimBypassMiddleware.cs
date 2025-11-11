@@ -1,10 +1,10 @@
 using System.Security.Claims;
-using InstanceManager.Host.AzFuncAPI.Authentication;
+using InstanceManager.Authentication.Core.Authentication;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Middleware;
 using Microsoft.Extensions.Logging;
 
-namespace InstanceManager.Host.AzFuncAPI.Middleware;
+namespace InstanceManager.Authentication.Core.Middleware;
 
 /// <summary>
 /// Middleware that bypasses authentication when requests come from Azure API Management.

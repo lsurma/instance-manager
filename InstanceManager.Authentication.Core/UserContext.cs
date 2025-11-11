@@ -1,7 +1,6 @@
 using System.Security.Claims;
-using InstanceManager.Application.Contracts.Common;
 
-namespace InstanceManager.Application.Core.Common;
+namespace InstanceManager.Authentication.Core;
 
 /// <summary>
 /// Scoped service that holds the current user's ClaimsPrincipal for the request.

@@ -1,4 +1,4 @@
-namespace InstanceManager.Application.Contracts.Common;
+namespace InstanceManager.Authentication.Core;
 
 /// <summary>
 /// Service for accessing the current authenticated user's identity.

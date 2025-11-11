@@ -1,5 +1,5 @@
 using System.Reflection;
-using InstanceManager.Application.Contracts.Common;
+using InstanceManager.Authentication.Core;
 using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
 using InstanceManager.Application.Core.Modules.DataSet;

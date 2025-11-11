@@ -1,4 +1,4 @@
-using InstanceManager.Application.Contracts.Common;
+using InstanceManager.Authentication.Core;
 using InstanceManager.Application.Core.Data;
 using Microsoft.EntityFrameworkCore;
 

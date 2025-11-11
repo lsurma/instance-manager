@@ -1,4 +1,4 @@
-namespace InstanceManager.Application.Contracts.Common;
+namespace InstanceManager.Authentication.Core;
 
 /// <summary>
 /// Represents the identity of the current user making a request.
