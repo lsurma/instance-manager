@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace InstanceManager.Host.AzFuncAPI.Authentication;
+namespace InstanceManager.Authentication.Core.Authentication;
 
 /// <summary>
 /// Authentication handler for API Key-based authentication.

@@ -1,4 +1,4 @@
-namespace InstanceManager.Host.AzFuncAPI.Authentication;
+namespace InstanceManager.Authentication.Core.Authentication;
 
 /// <summary>
 /// Configuration settings for authentication

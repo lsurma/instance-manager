@@ -1,4 +1,4 @@
-using InstanceManager.Application.Contracts.Common;
+using InstanceManager.Authentication.Core;
 using InstanceManager.Application.Core.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
