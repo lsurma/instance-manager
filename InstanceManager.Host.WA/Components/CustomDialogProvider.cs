@@ -57,9 +57,8 @@ public class CustomDialogProvider : FluentDialogProvider, IDisposable
         return parsedUri.GetLeftPart(UriPartial.Path);
     }
 
-    public new void Dispose()
+    public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
-        base.Dispose();
     }
 }
