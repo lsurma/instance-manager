@@ -1,0 +1,101 @@
+@page "/mjml-editor"
+@using System.Text.Json.Serialization
+@using System.Threading
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<h3>MJML Editor</h3>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-6">
+            <textarea class="form-control" @bind="MjmlInput" @bind:event="oninput" rows="20" style="width: 100%; height: calc(100vh - 200px);"></textarea>
+        </div>
+        <div class="col-6" style="border: 1px solid #ccc; padding: 10px; height: calc(100vh - 200px); overflow-y: auto;">
+            @((MarkupString)htmlOutput)
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _mjmlInput = """
+                               <mjml>
+                                 <mj-body>
+                                   <mj-section>
+                                     <mj-column>
+                                       <mj-text>
+                                         Hello World!
+                                       </mj-text>
+                                     </mj-column>
+                                   </mj-section>
+                                 </mj-body>
+                               </mjml>
+                               """;
+    private string htmlOutput = "";
+    private Timer _debounceTimer;
+    private const int DebounceTimeMs = 500;
+
+    private string MjmlInput
+    {
+        get => _mjmlInput;
+        set
+        {
+            _mjmlInput = value;
+            // Reset the timer on each input
+            _debounceTimer?.Change(DebounceTimeMs, Timeout.Infinite);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        _debounceTimer = new Timer(async _ => await OnTimerCallback(), null, Timeout.Infinite, Timeout.Infinite);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ConvertMjmlToHtml();
+        }
+    }
+
+    private async Task OnTimerCallback()
+    {
+        await ConvertMjmlToHtml();
+    }
+
+    private async Task ConvertMjmlToHtml()
+    {
+        try
+        {
+            var result = await JSRuntime.InvokeAsync<MjmlResult>("mjml", _mjmlInput);
+            if (result.Errors.Length > 0)
+            {
+                var errorString = string.Join(", ", result.Errors.Select(e => e.ToString()));
+                htmlOutput = $"<p>MJML Errors: {errorString}</p>";
+            }
+            else
+            {
+                htmlOutput = result.Html;
+            }
+        }
+        catch (Exception ex)
+        {
+            htmlOutput = $"<p>Error converting MJML: {ex.Message}</p>";
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public class MjmlResult
+    {
+        [JsonPropertyName("html")]
+        public string Html { get; set; }
+        [JsonPropertyName("errors")]
+        public object[] Errors { get; set; }
+    }
+
+    public void Dispose()
+    {
+        _debounceTimer?.Dispose();
+    }
+}
