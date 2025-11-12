@@ -1,23 +1,23 @@
-using CsvHelper;
 using MediatR;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using InstanceManager.Application.Contracts.Modules.Translations;
-using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using InstanceManager.Application.Contracts.Common;
+using InstanceManager.Application.Core.Common;
 
 namespace InstanceManager.Application.Core.Modules.Translations.Handlers;
 
 public class ExportTranslationsQueryHandler : IRequestHandler<ExportTranslationsQuery, Stream>
 {
     private readonly TranslationsQueryService _queryService;
+    private readonly TranslationExporterFactory _exporterFactory;
 
-    public ExportTranslationsQueryHandler(TranslationsQueryService queryService)
+    public ExportTranslationsQueryHandler(TranslationsQueryService queryService, TranslationExporterFactory exporterFactory)
     {
         _queryService = queryService;
+        _exporterFactory = exporterFactory;
     }
 
     public async Task<Stream> Handle(ExportTranslationsQuery request, CancellationToken cancellationToken)
@@ -39,14 +39,7 @@ public class ExportTranslationsQueryHandler : IRequestHandler<ExportTranslations
         var translations = await query.ToListAsync(cancellationToken);
         var translationDtos = translations.ToDto();
 
-        var memoryStream = new MemoryStream();
-        using (var writer = new StreamWriter(memoryStream, leaveOpen: true))
-        using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-        {
-            await csv.WriteRecordsAsync(translationDtos, cancellationToken);
-        }
-
-        memoryStream.Position = 0;
-        return memoryStream;
+        var exporter = _exporterFactory.GetExporter(request.Format);
+        return await exporter.ExportAsync(translationDtos, cancellationToken);
     }
 }

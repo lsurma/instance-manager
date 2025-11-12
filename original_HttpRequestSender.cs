@@ -1,7 +1,5 @@
-using System.Net;
-using System.Net.Http.Json;
+﻿using System.Net;
 using InstanceManager.Application.Contracts;
-using InstanceManager.Host.WA.Services;
 using MediatR;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
@@ -23,7 +21,7 @@ public class HttpRequestSender : IRequestSender
     {
         var requestAsJson = System.Text.Json.JsonSerializer.Serialize(request);
         var urlEncodedRequest = System.Net.WebUtility.UrlEncode(requestAsJson);
-        var requestName = GetRequestName(request.GetType());
+        var requestName = request.GetType().Name;
 
         try
         {
@@ -46,30 +44,5 @@ public class HttpRequestSender : IRequestSender
     public Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
         return SendAsync<TResponse>((object)request, cancellationToken);
-    }
-
-    /// <summary>
-    /// Generates a request name for the given type, including generic type arguments
-    /// Format: "GetTranslationsQuery&lt;SimpleTranslationDto&gt;" for generic types
-    /// </summary>
-    private static string GetRequestName(Type requestType)
-    {
-        if (!requestType.IsGenericType)
-        {
-            return requestType.Name;
-        }
-
-        // For generic types, format as: TypeName<Arg1,Arg2>
-        var genericTypeName = requestType.Name;
-        var backtickIndex = genericTypeName.IndexOf('`');
-        if (backtickIndex > 0)
-        {
-            genericTypeName = genericTypeName.Substring(0, backtickIndex);
-        }
-
-        var genericArgs = requestType.GetGenericArguments();
-        var argNames = string.Join(",", genericArgs.Select(t => t.Name));
-
-        return $"{genericTypeName}<{argNames}>";
     }
 }

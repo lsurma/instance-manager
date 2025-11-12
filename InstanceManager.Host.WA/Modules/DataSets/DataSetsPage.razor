@@ -12,6 +12,8 @@
     <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
         <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Add())" />
     </FluentNavLink>
+
+    <FluentButton OnClick="@OpenImportDialog" Disabled="@(_selectedDataSetId == null)" Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.ArrowUpload())" />
 </FluentStack>
 
 <FluentDivider Style="margin: 16px 0;" />

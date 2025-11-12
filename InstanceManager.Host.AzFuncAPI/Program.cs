@@ -50,6 +50,9 @@ builder.Services.AddInstanceManagerAuthentication(builder.Configuration);
 
 // Find all IRequest from contracts assembly
 builder.Services.AddSingleton<RequestRegistry>();
+builder.Services.AddSingleton<InstanceManager.Application.Core.Common.ITranslationExporter, InstanceManager.Application.Core.Common.CsvExporterService>();
+builder.Services.AddSingleton<InstanceManager.Application.Core.Common.ITranslationExporter, InstanceManager.Application.Core.Common.ExcelExporterService>();
+builder.Services.AddSingleton<InstanceManager.Application.Core.Common.TranslationExporterFactory>();
 
 
 var app = builder.Build();

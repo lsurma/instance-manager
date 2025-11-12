@@ -33,10 +33,13 @@ namespace InstanceManager.Host.AzFuncAPI.Controllers
 
             try
             {
+                string format = req.Query.ContainsKey("format") ? req.Query["format"].ToString().ToLowerInvariant() : "csv";
+
                 var query = new ExportTranslationsQuery
                 {
                     OrderBy = req.Query["orderBy"],
-                    OrderDirection = req.Query["orderDirection"]
+                    OrderDirection = req.Query["orderDirection"],
+                    Format = format
                 };
 
                 if (req.Query.ContainsKey("filtering"))
@@ -51,9 +54,24 @@ namespace InstanceManager.Host.AzFuncAPI.Controllers
 
                 var resultStream = await _mediator.Send(query);
 
-                return new FileStreamResult(resultStream, "text/csv")
+                string contentType;
+                string fileExtension;
+
+                switch (format)
                 {
-                    FileDownloadName = $"translations_{DateTime.UtcNow:yyyyMMddHHmmss}.csv"
+                    case "xlsx":
+                        contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                        fileExtension = "xlsx";
+                        break;
+                    default:
+                        contentType = "text/csv";
+                        fileExtension = "csv";
+                        break;
+                }
+
+                return new FileStreamResult(resultStream, contentType)
+                {
+                    FileDownloadName = $"translations_{DateTime.UtcNow:yyyyMMddHHmmss}.{fileExtension}"
                 };
             }
             catch (JsonException ex)

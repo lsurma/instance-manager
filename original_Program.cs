@@ -27,7 +27,7 @@ builder.Services.AddMsalAuthentication(options =>
 {
     builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
     options.ProviderOptions.LoginMode = "redirect";
-    
+
     // Add default scopes for API access
     var defaultScopes = builder.Configuration.GetSection("AzureAd:DefaultScopes").Get<string[]>();
     if (defaultScopes != null)
@@ -37,7 +37,6 @@ builder.Services.AddMsalAuthentication(options =>
             options.ProviderOptions.DefaultAccessTokenScopes.Add(scope);
         }
     }
-    options.ProviderOptions.DefaultAccessTokenScopes.Add("https://graph.microsoft.com/User.Read");
 });
 
 
