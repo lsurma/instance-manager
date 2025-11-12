@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace InstanceManager.Application.Core.Common
 {
     public class TranslationExporterFactory

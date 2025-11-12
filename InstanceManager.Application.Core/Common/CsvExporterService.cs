@@ -1,9 +1,5 @@
-using CsvHelper;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+using CsvHelper;
 using InstanceManager.Application.Contracts.Modules.Translations;
 
 namespace InstanceManager.Application.Core.Common

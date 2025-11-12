@@ -1,11 +1,9 @@
 using System.Net;
-using InstanceManager.Authentication.Core;
+using System.Security.Claims;
 using InstanceManager.Authentication.Core.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,7 +54,7 @@ public class FunctionsAuthorizationMiddleware : IFunctionsWorkerMiddleware
             // Still try to populate UserContext if HttpContext is available
             if (httpContext != null && userContext != null)
             {
-                userContext.User = httpContext.User ?? new System.Security.Claims.ClaimsPrincipal();
+                userContext.User = httpContext.User ?? new ClaimsPrincipal();
                 _logger.LogDebug("Populated UserContext (no auth required mode)");
             }
 

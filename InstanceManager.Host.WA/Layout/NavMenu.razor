@@ -1,23 +1,22 @@
-﻿<div class="navmenu">
+﻿@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+<div class="navmenu">
     <input type="checkbox" title="Menu expand/collapse toggle" id="navmenu-toggle" class="navmenu-icon" />
     <label for="navmenu-toggle" class="navmenu-icon">
-        <FluentIcon Value="@(new Icons.Regular.Size20.Navigation())" Color="Color.Fill" />
+        <FluentIcon Value="@(new Size20.Navigation())" Color="Color.Fill" />
     </label>
     <nav class="sitenav" aria-labelledby="main-menu">
         <FluentNavMenu Id="main-menu" Width="250" Collapsible="true" Title="Navigation menu" @bind-Expanded="expanded" @bind-Expanded:after="OnExpandedChanged" CustomToggle="true">
-            <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Icons.Regular.Size20.Home())" IconColor="Color.Accent">Home</FluentNavLink>
-            <FluentNavLink Href="instances" Icon="@(new Icons.Regular.Size20.NumberSymbolSquare())" IconColor="Color.Accent">Instances</FluentNavLink>
-            <FluentNavLink Href="datasets" Icon="@(new Icons.Regular.Size20.Database())" IconColor="Color.Accent">Data Sets</FluentNavLink>
-            <FluentNavLink Href="translations" Icon="@(new Icons.Regular.Size20.LocalLanguage())" IconColor="Color.Accent">Translations</FluentNavLink>
-            <FluentNavLink Href="paneltest" Icon="@(new Icons.Regular.Size20.SlideLayout())" IconColor="Color.Accent">Panel Test</FluentNavLink>
-            <FluentNavLink Href="mjml-editor" Icon="@(new Icons.Regular.Size20.Mail())" IconColor="Color.Accent">MJML Editor</FluentNavLink>
-            <FluentNavLink Href="resize-test" Icon="@(new Icons.Regular.Size20.ResizeLarge())" IconColor="Color.Accent">Resize Test</FluentNavLink>
-            <FluentNavLink Href="test-generic-queries" Icon="@(new Icons.Regular.Size20.BeakerSettings())" IconColor="Color.Accent">Test Generic Queries</FluentNavLink>
+            <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Size20.Home())" IconColor="Color.Accent">Home</FluentNavLink>
+            <FluentNavLink Href="instances" Icon="@(new Size20.NumberSymbolSquare())" IconColor="Color.Accent">Instances</FluentNavLink>
+            <FluentNavLink Href="datasets" Icon="@(new Size20.Database())" IconColor="Color.Accent">Data Sets</FluentNavLink>
+            <FluentNavLink Href="translations" Icon="@(new Size20.LocalLanguage())" IconColor="Color.Accent">Translations</FluentNavLink>
+            <FluentNavLink Href="paneltest" Icon="@(new Size20.SlideLayout())" IconColor="Color.Accent">Panel Test</FluentNavLink>
+            <FluentNavLink Href="mjml-editor" Icon="@(new Size20.Mail())" IconColor="Color.Accent">MJML Editor</FluentNavLink>
+            <FluentNavLink Href="resize-test" Icon="@(new Size20.ResizeLarge())" IconColor="Color.Accent">Resize Test</FluentNavLink>
+            <FluentNavLink Href="test-generic-queries" Icon="@(new Size20.BeakerSettings())" IconColor="Color.Accent">Test Generic Queries</FluentNavLink>
         </FluentNavMenu>
     </nav>
 </div>
-
-@using InstanceManager.Host.WA.Services
 @inject ILocalStorageService LocalStorage
 
 @code {

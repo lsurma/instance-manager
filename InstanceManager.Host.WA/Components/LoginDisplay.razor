@@ -1,24 +1,19 @@
-@using Microsoft.FluentUI.AspNetCore.Components.Icons
-@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
 @using System.Net.Http.Headers
-@using System.Text.Json
-@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
-
-@inject NavigationManager Navigation
-@inject IAccessTokenProvider TokenProvider
-@inject IHttpClientFactory ClientFactory
+@using InstanceManager.Host.WA.DAL
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
 
 <AuthorizeView>
     <Authorized>
-        <FluentMenu>
-            <div style="display: flex; align-items: center; cursor: pointer;">
-                <FluentPersona Name="@context.User.Identity?.Name" Image="@_photo" />
-            </div>
-            <FluentMenuItem OnClick="BeginSignOut">
-                <FluentIcon Value="@(new Icons.Regular.Size24.SignOut())" />
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.End">
+            <FluentButton IconStart="@(new Size24.SignOut())" OnClick="BeginSignOut">
                 Log out
-            </FluentMenuItem>
-        </FluentMenu>
+            </FluentButton>
+            
+            <div style="">
+                <FluentPersona ImageSize="32px" Name="@context.User.Identity?.Name" Image="@_photo" />
+            </div>
+        </FluentStack>
     </Authorized>
     <NotAuthorized>
         <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.End">
@@ -28,33 +23,42 @@
 </AuthorizeView>
 
 @code {
+    [Inject]    
+    NavigationManager Navigation { get; set; } = null!;
+    
+    [Inject]
+    IAccessTokenProvider TokenProvider { get; set; } = null!;
+    
+    [Inject]
+    InstanceManagerHttpClient HttpClient { get; set; } = null!;
+
+    [Inject]
+    ILogger<LoginDisplay> Logger { get; set; } = null!;
+
     private string? _photo;
 
     protected override async Task OnInitializedAsync()
     {
-        await GetUserPhoto();
+        try
+        {
+            await GetUserPhoto();
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, "Error fetching user photo");
+        }
     }
 
     private async Task GetUserPhoto()
     {
-        var result = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
-        {
-            Scopes = new[] { "https://graph.microsoft.com/User.Read" }
-        });
+        var response = await HttpClient.Client.GetAsync("https://graph.microsoft.com/v1.0/me/photo/$value");
 
-        if (result.TryGetToken(out var token))
+        if (response.IsSuccessStatusCode)
         {
-            var client = ClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Value);
-            var response = await client.GetAsync("https://graph.microsoft.com/v1.0/me/photo/$value");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var stream = await response.Content.ReadAsStreamAsync();
-                var bytes = new byte[stream.Length];
-                await stream.ReadAsync(bytes, 0, (int)stream.Length);
-                _photo = $"data:image/jpeg;base64,{Convert.ToBase64String(bytes)}";
-            }
+            var stream = await response.Content.ReadAsStreamAsync();
+            var bytes = new byte[stream.Length];
+            await stream.ReadExactlyAsync(bytes, 0, (int)stream.Length);
+            _photo = $"data:image/jpeg;base64,{Convert.ToBase64String(bytes)}";
         }
     }
 

@@ -1,7 +1,5 @@
 @typeparam TItem
-@using InstanceManager.Application.Contracts.Common
-@using Radzen
-@using Radzen.Blazor
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
 
 <FluentStack Orientation="Orientation.Horizontal" Style="margin-bottom: 16px;" VerticalAlignment="VerticalAlignment.Center">
@@ -12,7 +10,7 @@
     @if (!string.IsNullOrWhiteSpace(SearchTerm))
     {
         <FluentButton Appearance="Appearance.Lightweight"
-                      IconStart="@(new Icons.Regular.Size20.Dismiss())"
+                      IconStart="@(new Size20.Dismiss())"
                       OnClick="HandleClearSearch">
             Clear
         </FluentButton>

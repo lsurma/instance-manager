@@ -1,17 +1,12 @@
-using System.Reflection;
-using InstanceManager.Application.Contracts;
+using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Extensions;
 using InstanceManager.Authentication.Core;
 using InstanceManager.Host.AzFuncAPI.Services;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
-using Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Identity.Web;
-
 var builder = FunctionsApplication.CreateBuilder(args);
 
 // Configure Functions Web Application with middleware pipeline
@@ -50,9 +45,9 @@ builder.Services.AddInstanceManagerAuthentication(builder.Configuration);
 
 // Find all IRequest from contracts assembly
 builder.Services.AddSingleton<RequestRegistry>();
-builder.Services.AddSingleton<InstanceManager.Application.Core.Common.ITranslationExporter, InstanceManager.Application.Core.Common.CsvExporterService>();
-builder.Services.AddSingleton<InstanceManager.Application.Core.Common.ITranslationExporter, InstanceManager.Application.Core.Common.ExcelExporterService>();
-builder.Services.AddSingleton<InstanceManager.Application.Core.Common.TranslationExporterFactory>();
+builder.Services.AddSingleton<ITranslationExporter, CsvExporterService>();
+builder.Services.AddSingleton<ITranslationExporter, ExcelExporterService>();
+builder.Services.AddSingleton<TranslationExporterFactory>();
 
 
 var app = builder.Build();

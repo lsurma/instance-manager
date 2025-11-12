@@ -1,12 +1,12 @@
-﻿using InstanceManager.Host.AzFuncAPI.Services;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using InstanceManager.Host.AzFuncAPI.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace InstanceManager.Host.AzFuncAPI.Controllers;
 
@@ -78,7 +78,7 @@ public class QueryController
             // Send through MediatR
             var result = await _mediator.Send(request);
 
-            return new JsonResult(result, new JsonSerializerOptions()
+            return new JsonResult(result, new JsonSerializerOptions
             {
                 ReferenceHandler = ReferenceHandler.IgnoreCycles
             });

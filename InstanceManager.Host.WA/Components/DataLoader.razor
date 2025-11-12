@@ -1,4 +1,5 @@
 @typeparam TResponse
+@using System.Collections
 @typeparam TQuery
 @inject IRequestSender RequestSender
 @inject ILocalStorageService LocalStorage
@@ -83,7 +84,7 @@ else if (Data != null)
     private bool IsLoading { get; set; } = true;
     private string? ErrorMessage { get; set; }
     private string? _previousRefreshToken;
-    private bool _hasLoadedOnce = false;
+    private bool _hasLoadedOnce;
     private bool _isFirstLiveFetch = true;
 
     protected override async Task OnInitializedAsync()
@@ -184,7 +185,7 @@ else if (Data != null)
         if (data == null) return true;
         
         // Check if it's a collection
-        if (data is System.Collections.IEnumerable enumerable)
+        if (data is IEnumerable enumerable)
         {
             return !enumerable.Cast<object>().Any();
         }

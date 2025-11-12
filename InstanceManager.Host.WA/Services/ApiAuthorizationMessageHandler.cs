@@ -24,7 +24,7 @@ public class ApiAuthorizationMessageHandler : AuthorizationMessageHandler
         : base(provider, navigationManager)
     {
         ConfigureHandler(
-            authorizedUrls: new[] { apiBaseUrl },
+            authorizedUrls: new[] { apiBaseUrl, "https://graph.microsoft.com" },
             scopes: scopes ?? Array.Empty<string>()
         );
     }

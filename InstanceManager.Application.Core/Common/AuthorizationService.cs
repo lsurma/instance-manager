@@ -1,5 +1,5 @@
-using InstanceManager.Authentication.Core;
 using InstanceManager.Application.Core.Data;
+using InstanceManager.Authentication.Core;
 using Microsoft.EntityFrameworkCore;
 
 namespace InstanceManager.Application.Core.Common;

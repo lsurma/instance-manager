@@ -1,4 +1,3 @@
-@using InstanceManager.Application.Contracts.Modules.Translations
 @using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
 @implements IDialogContentComponent<TranslationPanelParameters>
 
@@ -41,7 +40,7 @@
             @if (Content.AvailableDataSets.Any())
             {
                 <FluentSelect Value="@(Content.Translation.DataSetId?.ToString() ?? string.Empty)"
-                              ValueChanged="@((val) => Content.Translation.DataSetId = String.IsNullOrWhiteSpace(val) ? null : Guid.Parse(val))"
+                              ValueChanged="@(val => Content.Translation.DataSetId = String.IsNullOrWhiteSpace(val) ? null : Guid.Parse(val))"
                               Label="Data Set (Optional)"
                               Items="DataSetSelectItems"
                               OptionValue="@(opt => opt.Value?.ToString() ?? string.Empty)"

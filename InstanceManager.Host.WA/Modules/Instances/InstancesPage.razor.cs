@@ -1,3 +1,4 @@
+using System.Web;
 using InstanceManager.Application.Contracts.Common;
 using InstanceManager.Application.Contracts.Modules.ProjectInstance;
 using InstanceManager.Host.WA.Components;
@@ -6,20 +7,19 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Radzen;
-using Radzen.Blazor;
 
 namespace InstanceManager.Host.WA.Modules.Instances;
 
 public partial class InstancesPage : ComponentBase, IDisposable
 {
     [Inject] 
-    private IDialogService DialogService { get; set; } = default!;
+    private IDialogService DialogService { get; set; } = null!;
     
     [Inject]
-    private NavigationManager NavigationManager { get; set; } = default!;
+    private NavigationManager NavigationManager { get; set; } = null!;
     
     [Inject]
-    private NavigationHelper NavHelper { get; set; } = default!;
+    private NavigationHelper NavHelper { get; set; } = null!;
     
     private List<ITreeViewItem> Items { get; set; } = new();
     private ITreeViewItem? SelectedItem { get; set; }
@@ -33,7 +33,7 @@ public partial class InstancesPage : ComponentBase, IDisposable
     // Should stay static - we dont wanna cache all different queries separately
     private string _cacheKey = "all_project_instances";
 
-    private int _totalItems = 0;
+    private int _totalItems;
     private int _pageSize = 20;
     private string? _searchTerm;
 
@@ -325,7 +325,7 @@ public partial class InstancesPage : ComponentBase, IDisposable
         try
         {
             var uri = new Uri(NavigationManager.Uri);
-            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            var query = HttpUtility.ParseQueryString(uri.Query);
             var action = query["action"];
             var idParam = query["id"];
             
@@ -333,7 +333,7 @@ public partial class InstancesPage : ComponentBase, IDisposable
             {
                 SelectedItem = null;
                 _selectedInstanceId = null;
-                await OpenInstancePanelAsync(null);
+                await OpenInstancePanelAsync();
             }
             else if (!string.IsNullOrEmpty(idParam) && Guid.TryParse(idParam, out var instanceId))
             {
@@ -397,7 +397,6 @@ public partial class InstancesPage : ComponentBase, IDisposable
             {
                 _refreshToken = Guid.NewGuid().ToString();
                 await InvokeAsync(StateHasChanged);
-                return;
             }
         };
 

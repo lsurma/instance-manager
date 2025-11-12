@@ -1,7 +1,6 @@
 using InstanceManager.Application.Contracts;
 using InstanceManager.Application.Contracts.Modules.ProjectInstance;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.FluentUI.AspNetCore.Components;
 
 namespace InstanceManager.Host.WA.Modules.Instances;
@@ -9,19 +8,19 @@ namespace InstanceManager.Host.WA.Modules.Instances;
 public partial class InstancePanel : IDialogContentComponent<InstancePanelParameters>
 {
     [Parameter]
-    public InstancePanelParameters Content { get; set; } = default!;
+    public InstancePanelParameters Content { get; set; } = null!;
     
     [CascadingParameter]
     public FluentDialog? Dialog { get; set; }
     
     [Inject] 
-    private IRequestSender RequestSender { get; set; } = default!;
+    private IRequestSender RequestSender { get; set; } = null!;
     
     [Inject]
-    private IDialogService DialogService { get; set; } = default!;
+    private IDialogService DialogService { get; set; } = null!;
     
     [Inject]
-    private IToastService ToastService { get; set; } = default!;
+    private IToastService ToastService { get; set; } = null!;
     
     private bool IsSaving { get; set; }
     private bool IsDeleting { get; set; }
@@ -70,7 +69,7 @@ public partial class InstancePanel : IDialogContentComponent<InstancePanelParame
             ErrorMessage = null;
             
             // Place for insert/update logic
-            await RequestSender.SendAsync(new SaveProjectInstanceCommand()
+            await RequestSender.SendAsync(new SaveProjectInstanceCommand
             {
                 Id = Content.IsEditMode ? Content.Instance.Id : null,
                 Name = Content.Instance.Name,
@@ -160,7 +159,7 @@ public partial class InstancePanel : IDialogContentComponent<InstancePanelParame
 
 public class InstancePanelParameters
 {
-    public ProjectInstanceDto Instance { get; set; } = default!;
+    public ProjectInstanceDto Instance { get; set; } = null!;
     public bool IsEditMode { get; set; }
     public List<ProjectInstanceDto> AvailableParentInstances { get; set; } = new();
     public Func<Task>? OnDataChanged { get; set; }

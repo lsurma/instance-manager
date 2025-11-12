@@ -3,7 +3,7 @@ namespace InstanceManager.Application.Contracts.Common;
 public record PaginationParameters
 {
     private int _pageNumber = 1;
-    private int _skip = 0;
+    private int _skip;
     
     /// <summary>
     /// Page number (1-based). Setting this will calculate Skip automatically.

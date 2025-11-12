@@ -1,6 +1,4 @@
 @using InstanceManager.Application.Contracts.Modules.ProjectInstance
-@using InstanceManager.Host.WA.CustomEvents
-
 <wa-tree selection="single" class="tree-selectable tree-with-lines" @onWaSelectionChange="HandleSelectionChange" @onWaExpand="HandleExpand" @onWaCollapse="HandleCollapse">
     @foreach (var instance in RootInstances)
     {

@@ -1,0 +1,36 @@
+﻿@page "/Monaco"
+
+<StandaloneCodeEditor
+    Id="my-editor-id"
+    CssClass="editor-class"
+    ConstructionOptions="EditorConstructionOptions"
+    @ref="EditorRef" />
+
+<style>
+    .editor-class {
+        height: 400px;
+    }
+</style>
+
+@code {
+    
+    private StandaloneCodeEditor EditorRef { get; set; }
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            Language = "json",
+            GlyphMargin = true,
+            Value = @"""
+             
+                { 
+                    ""name"": ""John Doe"", 
+                    ""age"": 30, 
+                    ""city"": ""New York"" 
+                }
+
+            """
+        };
+    }
+}

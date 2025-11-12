@@ -1,7 +1,6 @@
 using System.Net;
-using System.Net.Http.Json;
+using System.Text.Json;
 using InstanceManager.Application.Contracts;
-using InstanceManager.Host.WA.Services;
 using MediatR;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
@@ -21,8 +20,8 @@ public class HttpRequestSender : IRequestSender
 
     public async Task<TResponse> SendAsync<TResponse>(object request, CancellationToken cancellationToken = default)
     {
-        var requestAsJson = System.Text.Json.JsonSerializer.Serialize(request);
-        var urlEncodedRequest = System.Net.WebUtility.UrlEncode(requestAsJson);
+        var requestAsJson = JsonSerializer.Serialize(request);
+        var urlEncodedRequest = WebUtility.UrlEncode(requestAsJson);
         var requestName = GetRequestName(request.GetType());
 
         try

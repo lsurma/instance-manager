@@ -1,7 +1,6 @@
 @page "/mjml-editor"
-@using System.Text.Json.Serialization
-@using System.Threading
 @inject IJSRuntime JSRuntime
+@using System.Text.Json.Serialization
 @implements IDisposable
 
 <h3>MJML Editor</h3>
@@ -18,7 +17,7 @@
 </div>
 
 @code {
-    private string _mjmlInput = """
+    private string _mjmlInput = @"""
                                <mjml>
                                  <mj-body>
                                    <mj-section>
@@ -31,6 +30,7 @@
                                  </mj-body>
                                </mjml>
                                """;
+    
     private string htmlOutput = "";
     private Timer _debounceTimer;
     private const int DebounceTimeMs = 500;

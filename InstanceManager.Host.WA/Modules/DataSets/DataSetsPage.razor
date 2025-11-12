@@ -1,19 +1,18 @@
 @page "/datasets"
+@attribute [Authorize]
 @using InstanceManager.Application.Contracts.Common
 @using InstanceManager.Application.Contracts.Modules.DataSet
-@using Radzen
-@using Radzen.Blazor
-@attribute [Authorize]
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
 
 <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
     <h3 style="margin: 0;">Data Sets</h3>
     
     <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
-        <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Add())" />
+        <FluentButton Appearance="Appearance.Accent" IconStart="@(new Size20.Add())" />
     </FluentNavLink>
 
-    <FluentButton OnClick="@OpenImportDialog" Disabled="@(_selectedDataSetId == null)" Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.ArrowUpload())" />
+    <FluentButton OnClick="@OpenImportDialog" Disabled="@(_selectedDataSetId == null)" Appearance="Appearance.Accent" IconStart="@(new Size20.ArrowUpload())" />
 </FluentStack>
 
 <FluentDivider Style="margin: 16px 0;" />

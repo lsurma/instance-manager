@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using Microsoft.FluentUI.AspNetCore.Components;
 using Radzen;
 
 namespace InstanceManager.Host.WA.Components;

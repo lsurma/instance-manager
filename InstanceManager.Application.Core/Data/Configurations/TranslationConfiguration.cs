@@ -1,11 +1,12 @@
+using InstanceManager.Application.Core.Modules.Translations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InstanceManager.Application.Core.Data.Configurations;
 
-public class TranslationConfiguration : AuditableEntityConfiguration<Modules.Translations.Translation>
+public class TranslationConfiguration : AuditableEntityConfiguration<Translation>
 {
-    protected override void ConfigureEntity(EntityTypeBuilder<Modules.Translations.Translation> builder)
+    protected override void ConfigureEntity(EntityTypeBuilder<Translation> builder)
     {
         builder.Property(e => e.InternalGroupName)
             .IsRequired()

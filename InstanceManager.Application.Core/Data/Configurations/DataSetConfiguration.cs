@@ -1,12 +1,12 @@
-using System.Text.Json;
+using InstanceManager.Application.Core.Modules.DataSet;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InstanceManager.Application.Core.Data.Configurations;
 
-public class DataSetConfiguration : AuditableEntityConfiguration<Modules.DataSet.DataSet>
+public class DataSetConfiguration : AuditableEntityConfiguration<DataSet>
 {
-    protected override void ConfigureEntity(EntityTypeBuilder<Modules.DataSet.DataSet> builder)
+    protected override void ConfigureEntity(EntityTypeBuilder<DataSet> builder)
     {
         builder.Property(e => e.Name)
             .IsRequired()

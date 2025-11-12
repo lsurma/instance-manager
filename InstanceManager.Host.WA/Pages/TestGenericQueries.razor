@@ -1,8 +1,7 @@
 @page "/test-generic-queries"
-@using InstanceManager.Application.Contracts
+@using System.Text.Json
 @using InstanceManager.Application.Contracts.Common
 @using InstanceManager.Application.Contracts.Modules.Translations
-@using Microsoft.FluentUI.AspNetCore.Components
 
 <PageTitle>Test Generic Queries</PageTitle>
 
@@ -41,7 +40,7 @@
     protected IRequestSender RequestSender { get; set; } = null!;
 
     private string resultJson = string.Empty;
-    private bool isLoading = false;
+    private bool isLoading;
     private string errorMessage = string.Empty;
 
     private async Task LoadFullTranslations()
@@ -59,11 +58,11 @@
             return new
             {
                 QueryType = "GetTranslationsQuery<TranslationDto>",
-                TotalItems = result.TotalItems,
-                TotalPages = result.TotalPages,
-                PageSize = result.PageSize,
-                CurrentPage = result.CurrentPage,
-                Items = result.Items
+                result.TotalItems,
+                result.TotalPages,
+                result.PageSize,
+                result.CurrentPage,
+                result.Items
             };
         });
     }
@@ -83,11 +82,11 @@
             return new
             {
                 QueryType = "GetTranslationsQuery<SimpleTranslationDto>",
-                TotalItems = result.TotalItems,
-                TotalPages = result.TotalPages,
-                PageSize = result.PageSize,
-                CurrentPage = result.CurrentPage,
-                Items = result.Items
+                result.TotalItems,
+                result.TotalPages,
+                result.PageSize,
+                result.CurrentPage,
+                result.Items
             };
         });
     }
@@ -102,7 +101,7 @@
         try
         {
             var result = await queryAction();
-            resultJson = System.Text.Json.JsonSerializer.Serialize(result, new System.Text.Json.JsonSerializerOptions
+            resultJson = JsonSerializer.Serialize(result, new JsonSerializerOptions
             {
                 WriteIndented = true
             });

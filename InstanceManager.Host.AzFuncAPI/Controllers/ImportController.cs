@@ -1,6 +1,4 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
+using System.Text.Json;
 using InstanceManager.Application.Contracts.Modules.DataSets;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -61,7 +59,7 @@ namespace InstanceManager.Host.AzFuncAPI.Controllers
             try
             {
                 var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-                var command = System.Text.Json.JsonSerializer.Deserialize<ProcessTranslationFileCommand>(requestBody);
+                var command = JsonSerializer.Deserialize<ProcessTranslationFileCommand>(requestBody);
 
                 await _mediator.Send(command);
 

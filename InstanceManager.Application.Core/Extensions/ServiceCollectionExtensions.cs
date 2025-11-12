@@ -1,11 +1,10 @@
-using System.Reflection;
 using InstanceManager.Application.Contracts;
-using InstanceManager.Authentication.Core;
 using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
 using InstanceManager.Application.Core.Modules.DataSet;
 using InstanceManager.Application.Core.Modules.ProjectInstance;
 using InstanceManager.Application.Core.Modules.Translations;
+using InstanceManager.Authentication.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using InstanceManager.Application.Contracts.Common;
 using InstanceManager.Application.Contracts.Modules.Translations;
 using MediatR;
@@ -6,10 +7,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using System;
-using System.IO;
-using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace InstanceManager.Host.AzFuncAPI.Controllers
 {

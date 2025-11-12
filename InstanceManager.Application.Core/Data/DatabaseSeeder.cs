@@ -1,3 +1,5 @@
+using InstanceManager.Application.Core.Modules.ProjectInstance;
+
 namespace InstanceManager.Application.Core.Data;
 
 public static class DatabaseSeeder
@@ -7,10 +9,10 @@ public static class DatabaseSeeder
         // Seed ProjectInstances
         if (!context.ProjectInstances.Any())
         {
-            var projects = new List<Modules.ProjectInstance.ProjectInstance>();
+            var projects = new List<ProjectInstance>();
 
             // Create root projects
-            var project1 = new Modules.ProjectInstance.ProjectInstance
+            var project1 = new ProjectInstance
             {
                 Id = Guid.NewGuid(),
                 Name = "E-Commerce Platform",
@@ -23,7 +25,7 @@ public static class DatabaseSeeder
             };
             projects.Add(project1);
 
-            var project2 = new Modules.ProjectInstance.ProjectInstance
+            var project2 = new ProjectInstance
             {
                 Id = Guid.NewGuid(),
                 Name = "Mobile Application Suite",
@@ -36,7 +38,7 @@ public static class DatabaseSeeder
             };
             projects.Add(project2);
 
-            var project3 = new Modules.ProjectInstance.ProjectInstance
+            var project3 = new ProjectInstance
             {
                 Id = Guid.NewGuid(),
                 Name = "Data Analytics Dashboard",
@@ -50,7 +52,7 @@ public static class DatabaseSeeder
             projects.Add(project3);
 
             // Create child projects for E-Commerce Platform
-            var childProject1 = new Modules.ProjectInstance.ProjectInstance
+            var childProject1 = new ProjectInstance
             {
                 Id = Guid.NewGuid(),
                 Name = "Payment Gateway Integration",
@@ -64,7 +66,7 @@ public static class DatabaseSeeder
             };
             projects.Add(childProject1);
 
-            var childProject2 = new Modules.ProjectInstance.ProjectInstance
+            var childProject2 = new ProjectInstance
             {
                 Id = Guid.NewGuid(),
                 Name = "Product Catalog Service",
@@ -79,7 +81,7 @@ public static class DatabaseSeeder
             projects.Add(childProject2);
 
             // Create child projects for Mobile Application Suite
-            var childProject3 = new Modules.ProjectInstance.ProjectInstance
+            var childProject3 = new ProjectInstance
             {
                 Id = Guid.NewGuid(),
                 Name = "iOS App",
@@ -93,7 +95,7 @@ public static class DatabaseSeeder
             };
             projects.Add(childProject3);
 
-            var childProject4 = new Modules.ProjectInstance.ProjectInstance
+            var childProject4 = new ProjectInstance
             {
                 Id = Guid.NewGuid(),
                 Name = "Android App",
@@ -108,7 +110,7 @@ public static class DatabaseSeeder
             projects.Add(childProject4);
 
             // Create a nested child project
-            var nestedChildProject = new Modules.ProjectInstance.ProjectInstance
+            var nestedChildProject = new ProjectInstance
             {
                 Id = Guid.NewGuid(),
                 Name = "Payment Gateway - Stripe Module",
@@ -123,7 +125,7 @@ public static class DatabaseSeeder
             projects.Add(nestedChildProject);
 
             // Add standalone project
-            var project4 = new Modules.ProjectInstance.ProjectInstance
+            var project4 = new ProjectInstance
             {
                 Id = Guid.NewGuid(),
                 Name = "Internal Tools",

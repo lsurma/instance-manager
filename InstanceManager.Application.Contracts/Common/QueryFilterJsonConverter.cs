@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -97,7 +96,7 @@ public class QueryFilterJsonConverter : JsonConverter<IQueryFilter>
             }
         }
         
-        throw new JsonException($"Unable to determine IQueryFilter type. Missing or invalid 'Name' property.");
+        throw new JsonException("Unable to determine IQueryFilter type. Missing or invalid 'Name' property.");
     }
 
     public override void Write(Utf8JsonWriter writer, IQueryFilter value, JsonSerializerOptions options)

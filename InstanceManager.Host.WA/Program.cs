@@ -2,14 +2,13 @@ using InstanceManager.Application.Contracts;
 using InstanceManager.Host.WA;
 using InstanceManager.Host.WA.DAL;
 using InstanceManager.Host.WA.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Radzen;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components;
-
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
@@ -29,6 +28,8 @@ builder.Services.AddMsalAuthentication(options =>
     options.ProviderOptions.LoginMode = "redirect";
     
     // Add default scopes for API access
+    // We using .default
+    // Dont need to specify each scope individually
     var defaultScopes = builder.Configuration.GetSection("AzureAd:DefaultScopes").Get<string[]>();
     if (defaultScopes != null)
     {
@@ -37,9 +38,7 @@ builder.Services.AddMsalAuthentication(options =>
             options.ProviderOptions.DefaultAccessTokenScopes.Add(scope);
         }
     }
-    options.ProviderOptions.DefaultAccessTokenScopes.Add("https://graph.microsoft.com/User.Read");
 });
-
 
 // Configure HttpClient to use the API base URL from configuration
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:7233/api/";

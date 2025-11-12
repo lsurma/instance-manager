@@ -3,7 +3,6 @@ using InstanceManager.Application.Contracts.Modules.ProjectInstance;
 using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace InstanceManager.Application.Core.Modules.ProjectInstance.Handlers;
 

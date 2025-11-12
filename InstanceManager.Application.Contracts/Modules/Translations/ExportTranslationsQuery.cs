@@ -1,4 +1,3 @@
-using System.IO;
 using InstanceManager.Application.Contracts.Common;
 using MediatR;
 

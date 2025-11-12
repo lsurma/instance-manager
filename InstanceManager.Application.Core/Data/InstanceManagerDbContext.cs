@@ -1,7 +1,9 @@
-using InstanceManager.Authentication.Core;
 using InstanceManager.Application.Core.Abstractions;
+using InstanceManager.Application.Core.Modules.DataSet;
+using InstanceManager.Application.Core.Modules.ProjectInstance;
+using InstanceManager.Application.Core.Modules.Translations;
+using InstanceManager.Authentication.Core;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace InstanceManager.Application.Core.Data;
 
@@ -16,11 +18,11 @@ public class InstanceManagerDbContext : DbContext
         _currentUserService = currentUserService;
     }
 
-    public DbSet<Modules.ProjectInstance.ProjectInstance> ProjectInstances { get; set; }
+    public DbSet<ProjectInstance> ProjectInstances { get; set; }
 
-    public DbSet<Modules.DataSet.DataSet> DataSets { get; set; }
+    public DbSet<DataSet> DataSets { get; set; }
 
-    public DbSet<Modules.Translations.Translation> Translations { get; set; }
+    public DbSet<Translation> Translations { get; set; }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

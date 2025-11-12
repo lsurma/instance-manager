@@ -1,6 +1,6 @@
-using MediatR;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using MediatR;
 
 namespace InstanceManager.Host.AzFuncAPI.Services;
 

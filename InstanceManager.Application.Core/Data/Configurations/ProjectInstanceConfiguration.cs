@@ -1,11 +1,12 @@
+using InstanceManager.Application.Core.Modules.ProjectInstance;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InstanceManager.Application.Core.Data.Configurations;
 
-public class ProjectInstanceConfiguration : AuditableEntityConfiguration<Modules.ProjectInstance.ProjectInstance>
+public class ProjectInstanceConfiguration : AuditableEntityConfiguration<ProjectInstance>
 {
-    protected override void ConfigureEntity(EntityTypeBuilder<Modules.ProjectInstance.ProjectInstance> builder)
+    protected override void ConfigureEntity(EntityTypeBuilder<ProjectInstance> builder)
     {
         builder.Property(e => e.Name)
             .IsRequired()

@@ -1,11 +1,12 @@
+using InstanceManager.Application.Core.Modules.DataSet;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InstanceManager.Application.Core.Data.Configurations;
 
-public class DataSetIncludeConfiguration : IEntityTypeConfiguration<Modules.DataSet.DataSetInclude>
+public class DataSetIncludeConfiguration : IEntityTypeConfiguration<DataSetInclude>
 {
-    public void Configure(EntityTypeBuilder<Modules.DataSet.DataSetInclude> builder)
+    public void Configure(EntityTypeBuilder<DataSetInclude> builder)
     {
         builder.HasKey(e => new { e.ParentDataSetId, e.IncludedDataSetId });
 

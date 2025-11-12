@@ -1,5 +1,3 @@
-using InstanceManager.Application.Contracts.Common;
-
 namespace InstanceManager.Application.Core.Common;
 
 /// <summary>

@@ -1,4 +1,3 @@
-using InstanceManager.Application.Contracts.Common;
 using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
 

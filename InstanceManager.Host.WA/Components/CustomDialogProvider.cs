@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.FluentUI.AspNetCore.Components;
@@ -7,7 +8,7 @@ namespace InstanceManager.Host.WA.Components;
 public class CustomDialogProvider : FluentDialogProvider, IDisposable
 {
     [Inject]
-    private NavigationManager NavigationManager { get; set; } = default!;
+    private NavigationManager NavigationManager { get; set; } = null!;
 
     private string? _previousPath;
 
@@ -20,7 +21,7 @@ public class CustomDialogProvider : FluentDialogProvider, IDisposable
 
         // Get OnLocationChanged method from base class using reflection
         var baseType = typeof(FluentDialogProvider);
-        var locationChangedMethod = baseType.GetMethod("LocationChanged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var locationChangedMethod = baseType.GetMethod("LocationChanged", BindingFlags.NonPublic | BindingFlags.Instance);
 
         // Remove original subscription to avoid double handling
         if (locationChangedMethod != null)

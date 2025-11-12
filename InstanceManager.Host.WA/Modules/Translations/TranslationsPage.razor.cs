@@ -1,3 +1,4 @@
+using System.Web;
 using InstanceManager.Application.Contracts;
 using InstanceManager.Application.Contracts.Common;
 using InstanceManager.Application.Contracts.Modules.DataSet;
@@ -14,16 +15,16 @@ namespace InstanceManager.Host.WA.Modules.Translations;
 public partial class TranslationsPage : ComponentBase, IDisposable
 {
     [Inject] 
-    private IDialogService DialogService { get; set; } = default!;
+    private IDialogService DialogService { get; set; } = null!;
     
     [Inject]
-    private NavigationManager NavigationManager { get; set; } = default!;
+    private NavigationManager NavigationManager { get; set; } = null!;
     
     [Inject]
-    private NavigationHelper NavHelper { get; set; } = default!;
+    private NavigationHelper NavHelper { get; set; } = null!;
     
     [Inject]
-    private IRequestSender RequestSender { get; set; } = default!;
+    private IRequestSender RequestSender { get; set; } = null!;
     
     private List<TranslationDto> AllTranslations { get; set; } = new();
     private List<DataSetDto> AllDataSets { get; set; } = new();
@@ -38,7 +39,7 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     // Should stay static - we dont wanna cache all different queries separately
     private string _cacheKey = "paginated_translations";
     
-    private int _totalItems = 0;
+    private int _totalItems;
     private int _pageSize = 20;
     private string? _searchTerm;
     private string? _cultureNameFilter;
@@ -54,7 +55,7 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     {
         try
         {
-            var result = await RequestSender.SendAsync<PaginatedList<DataSetDto>>(GetDataSetsQuery.AllItems());
+            var result = await RequestSender.SendAsync(GetDataSetsQuery.AllItems());
             AllDataSets = result.Items;
         }
         catch (Exception ex)
@@ -239,14 +240,14 @@ public partial class TranslationsPage : ComponentBase, IDisposable
         try
         {
             var uri = new Uri(NavigationManager.Uri);
-            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            var query = HttpUtility.ParseQueryString(uri.Query);
             var action = query["action"];
             var idParam = query["id"];
             
             if (action == "create")
             {
                 _selectedTranslationId = null;
-                await OpenTranslationPanelAsync(null);
+                await OpenTranslationPanelAsync();
             }
             else if (!string.IsNullOrEmpty(idParam) && Guid.TryParse(idParam, out var translationId))
             {
@@ -303,7 +304,6 @@ public partial class TranslationsPage : ComponentBase, IDisposable
             {
                 _refreshToken = Guid.NewGuid().ToString();
                 await InvokeAsync(StateHasChanged);
-                return;
             }
         };
 

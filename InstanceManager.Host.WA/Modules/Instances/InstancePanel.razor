@@ -1,4 +1,3 @@
-@using InstanceManager.Application.Contracts.Modules.ProjectInstance
 @using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
 @implements IDialogContentComponent<InstancePanelParameters>
 
@@ -33,7 +32,7 @@
             @if (Content.AvailableParentInstances.Any())
             {
                 <FluentSelect Value="@(Content.Instance.ParentProjectId.ToString())"
-                              ValueChanged="@((val) => Content.Instance.ParentProjectId = String.IsNullOrWhiteSpace(val) ? null : Guid.Parse(val))"
+                              ValueChanged="@(val => Content.Instance.ParentProjectId = String.IsNullOrWhiteSpace(val) ? null : Guid.Parse(val))"
                               Label="Parent Project (Optional)"
                               Items="ParentSelectItems"
                               OptionValue="@(opt => opt.Value.ToString())"

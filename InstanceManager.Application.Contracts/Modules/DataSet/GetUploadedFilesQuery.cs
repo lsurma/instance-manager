@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using MediatR;
 
 namespace InstanceManager.Application.Contracts.Modules.DataSets

@@ -306,12 +306,9 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
         {
             return await filteredQuery.Select(options.Selector).FirstOrDefaultAsync(cancellationToken);
         }
-        else
-        {
-            // No projection - return full entity cast to TResult
-            var entity = await filteredQuery.FirstOrDefaultAsync(cancellationToken);
-            return (TResult?)(object?)entity;
-        }
+        // No projection - return full entity cast to TResult
+        var entity = await filteredQuery.FirstOrDefaultAsync(cancellationToken);
+        return (TResult?)(object?)entity;
     }
 
     /// <summary>
@@ -358,12 +355,9 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
         {
             return await filteredQuery.Select(options.Selector).ToListAsync(cancellationToken);
         }
-        else
-        {
-            // No projection - return full entities cast to TResult
-            var entities = await filteredQuery.ToListAsync(cancellationToken);
-            return entities.Cast<TResult>().ToList();
-        }
+        // No projection - return full entities cast to TResult
+        var entities = await filteredQuery.ToListAsync(cancellationToken);
+        return entities.Cast<TResult>().ToList();
     }
 
     /// <summary>
@@ -458,12 +452,9 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
         {
             return await filteredQuery.Select(options.Selector).FirstOrDefaultAsync(cancellationToken);
         }
-        else
-        {
-            // No projection - return full entity cast to TResult
-            var entity = await filteredQuery.FirstOrDefaultAsync(cancellationToken);
-            return (TResult?)(object?)entity;
-        }
+        // No projection - return full entity cast to TResult
+        var entity = await filteredQuery.FirstOrDefaultAsync(cancellationToken);
+        return (TResult?)(object?)entity;
     }
 
     /// <summary>
@@ -511,12 +502,9 @@ public abstract class QueryService<TEntity, TPrimaryKey> : IQueryService<TEntity
         {
             return await filteredQuery.Select(options.Selector).SingleAsync(cancellationToken);
         }
-        else
-        {
-            // No projection - return full entity cast to TResult
-            var entity = await filteredQuery.SingleAsync(cancellationToken);
-            return (TResult)(object)entity;
-        }
+        // No projection - return full entity cast to TResult
+        var entity = await filteredQuery.SingleAsync(cancellationToken);
+        return (TResult)(object)entity;
     }
 
     /// <summary>

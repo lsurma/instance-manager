@@ -1,8 +1,6 @@
 using InstanceManager.Application.Contracts.Modules.Translations;
-using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Data;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace InstanceManager.Application.Core.Modules.Translations.Handlers;
 

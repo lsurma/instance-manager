@@ -27,7 +27,7 @@ public abstract class AuditableEntityConfiguration<TEntity> : IEntityTypeConfigu
         builder.Property(e => e.UpdatedAt)
             .HasConversion(
                 v => v.HasValue ? v.Value.UtcDateTime.Ticks : (long?)null,
-                v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : (DateTimeOffset?)null);
+                v => v.HasValue ? new DateTimeOffset(v.Value, TimeSpan.Zero) : null);
         
         ConfigureEntity(builder);
     }
