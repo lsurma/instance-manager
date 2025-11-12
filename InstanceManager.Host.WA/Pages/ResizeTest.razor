@@ -1,0 +1,42 @@
+@page "/resize-test"
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+
+<h1>Resize Test</h1>
+
+<div @ref="resizablePanel" class="resizable-panel" style="width: @(width)px;">
+    <p>This panel can be resized by dragging its right edge.</p>
+    <p>Current width: @width px</p>
+</div>
+
+@code {
+    private int width = 400;
+    private ElementReference resizablePanel;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("interactJs.makeResizable", DotNetObjectReference.Create(this), resizablePanel);
+        }
+    }
+
+    [JSInvokable]
+    public void SetWidth(double newWidth)
+    {
+        width = (int)newWidth;
+        StateHasChanged();
+    }
+}
+
+<style>
+    .resizable-panel {
+        border: 2px solid #007bff;
+        border-radius: 5px;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        box-sizing: border-box;
+        touch-action: none;
+        min-width: 100px;
+    }
+</style>
