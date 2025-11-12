@@ -14,9 +14,11 @@ Welcome to your new Fluent Blazor app.
 
 <RadzenButton Click="SendTestRequest">test btn</RadzenButton>
 
-<textarea style="width:100%; height:400px;">
-@System.Text.Json.JsonSerializer.Serialize(ProjectInstances, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })
-</textarea>
+<StandaloneCodeEditor
+    Id="my-editor-id"
+    CssClass="editor-class"
+    ConstructionOptions="EditorConstructionOptions"
+    @ref="EditorRef" />
 
 @code {
     [Inject]
@@ -24,10 +26,23 @@ Welcome to your new Fluent Blazor app.
 
     protected  List<ProjectInstanceDto>ProjectInstances { get; set; } = new(); 
     
+    private StandaloneCodeEditor EditorRef { get; set; }
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            Language = "json",
+            GlyphMargin = true,
+            Value = System.Text.Json.JsonSerializer.Serialize(ProjectInstances, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })
+        };
+    }
+
     private async Task SendTestRequest(MouseEventArgs arg)
     {
         var result = await RequestSender.SendAsync<PaginatedList<ProjectInstanceDto>>(new GetProjectInstancesQuery());
         ProjectInstances = result.Items;
+        await EditorRef.SetValue(System.Text.Json.JsonSerializer.Serialize(ProjectInstances, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
 
         _ = 1;
 
