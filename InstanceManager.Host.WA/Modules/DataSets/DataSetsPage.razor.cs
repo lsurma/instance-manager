@@ -271,4 +271,21 @@ public partial class DataSetsPage : ComponentBase, IDisposable
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
+
+    private async Task OpenImportDialog()
+    {
+        if (_selectedDataSetId == null)
+        {
+            return;
+        }
+
+        await DialogService.ShowPanelAsync<ImportDialog>(new { DataSetId = _selectedDataSetId }, new DialogParameters
+        {
+            Title = "Import Translations",
+            Width = "600px",
+            TrapFocus = false,
+            Modal = false,
+            Id = $"panel-{Guid.NewGuid()}"
+        });
+    }
 }
