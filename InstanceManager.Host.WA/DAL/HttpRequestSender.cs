@@ -1,5 +1,7 @@
 using System.Net;
+using System.Net.Http.Json;
 using InstanceManager.Application.Contracts;
+using InstanceManager.Host.WA.Services;
 using MediatR;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
@@ -25,7 +27,7 @@ public class HttpRequestSender : IRequestSender
 
         try
         {
-            var data = await _httpClient.GetAsync<TResponse>($"query/{requestName}?body={urlEncodedRequest}", cancellationToken);
+            var data = await _httpClient.Client.GetFromJsonAsync<TResponse>($"query/{requestName}?body={urlEncodedRequest}", cancellationToken);
             return data!;
         }
         catch (AccessTokenNotAvailableException exception)

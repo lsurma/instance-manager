@@ -1,0 +1,65 @@
+@using Radzen.Blazor
+@using InstanceManager.Host.WA.Services
+@using Microsoft.AspNetCore.Components.Forms
+@using InstanceManager.Application.Contracts.Modules.DataSets
+@using Microsoft.FluentUI.AspNetCore.Components
+@inject InstanceManagerHttpClient InstanceManagerHttpClient
+@inject IRequestSender RequestSender
+@implements IDialogContentComponent
+
+<RadzenUpload Name="file" Url="import/translations" Accept=".csv,.xlsx" Complete=@OnUploadComplete HttpClient="@InstanceManagerHttpClient.Client">
+    <RadzenUploadFile>
+        <input type="hidden" name="dataSetId" value="@DataSetId" />
+    </RadzenUploadFile>
+</RadzenUpload>
+
+<RadzenDataGrid @ref="filesGrid" TItem="UploadedFileDto" Data="@uploadedFiles" AllowPaging="false" AllowSorting="false">
+    <Columns>
+        <RadzenDataGridColumn TItem="UploadedFileDto" Property="FileName" Title="File Name" />
+        <RadzenDataGridColumn TItem="UploadedFileDto" Title="Actions">
+            <Template Context="data">
+                <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="play_arrow" Click="@(() => ProcessFile(data.FileName))" />
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    [Parameter]
+    public Guid DataSetId { get; set; }
+
+    [Parameter]
+    public object Content { get; set; } = default!;
+
+    private RadzenDataGrid<UploadedFileDto> filesGrid = default!;
+    private List<UploadedFileDto> uploadedFiles = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUploadedFiles();
+    }
+
+    private async Task LoadUploadedFiles()
+    {
+        uploadedFiles = await RequestSender.SendAsync<List<UploadedFileDto>>(new GetUploadedFilesQuery { DataSetId = DataSetId });
+        await filesGrid.Reload();
+    }
+
+    private async Task OnUploadComplete(UploadCompleteEventArgs args)
+    {
+        if (args.JsonResponse.IsSuccessStatusCode)
+        {
+            await LoadUploadedFiles();
+        }
+        else
+        {
+            Console.WriteLine($"Upload failed: {args.RawResponse}");
+        }
+    }
+
+    private async Task ProcessFile(string fileName)
+    {
+        await RequestSender.SendAsync(new ProcessTranslationFileCommand { DataSetId = DataSetId, FileName = fileName });
+        await LoadUploadedFiles();
+    }
+}
