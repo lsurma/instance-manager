@@ -37,6 +37,7 @@ builder.Services.AddMsalAuthentication(options =>
             options.ProviderOptions.DefaultAccessTokenScopes.Add(scope);
         }
     }
+    options.ProviderOptions.DefaultAccessTokenScopes.Add("https://graph.microsoft.com/User.Read");
 });
 
 

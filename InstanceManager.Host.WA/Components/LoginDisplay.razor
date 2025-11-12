@@ -1,12 +1,24 @@
+@using Microsoft.FluentUI.AspNetCore.Components.Icons
 @using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@using System.Net.Http.Headers
+@using System.Text.Json
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
 @inject NavigationManager Navigation
+@inject IAccessTokenProvider TokenProvider
+@inject IHttpClientFactory ClientFactory
 
 <AuthorizeView>
     <Authorized>
-        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.End">
-            <FluentLabel>Hello, @context.User.Identity?.Name!</FluentLabel>
-            <FluentButton Appearance="Appearance.Lightweight" OnClick="BeginSignOut">Log out</FluentButton>
-        </FluentStack>
+        <FluentMenu>
+            <div style="display: flex; align-items: center; cursor: pointer;">
+                <FluentPersona Name="@context.User.Identity?.Name" Image="@_photo" />
+            </div>
+            <FluentMenuItem OnClick="BeginSignOut">
+                <FluentIcon Value="@(new Icons.Regular.Size24.SignOut())" />
+                Log out
+            </FluentMenuItem>
+        </FluentMenu>
     </Authorized>
     <NotAuthorized>
         <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.End">
@@ -16,6 +28,36 @@
 </AuthorizeView>
 
 @code {
+    private string? _photo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetUserPhoto();
+    }
+
+    private async Task GetUserPhoto()
+    {
+        var result = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
+        {
+            Scopes = new[] { "https://graph.microsoft.com/User.Read" }
+        });
+
+        if (result.TryGetToken(out var token))
+        {
+            var client = ClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Value);
+            var response = await client.GetAsync("https://graph.microsoft.com/v1.0/me/photo/$value");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var stream = await response.Content.ReadAsStreamAsync();
+                var bytes = new byte[stream.Length];
+                await stream.ReadAsync(bytes, 0, (int)stream.Length);
+                _photo = $"data:image/jpeg;base64,{Convert.ToBase64String(bytes)}";
+            }
+        }
+    }
+
     private void BeginSignOut()
     {
         Navigation.NavigateToLogout("authentication/logout");
