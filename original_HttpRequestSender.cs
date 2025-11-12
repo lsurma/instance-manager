@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using InstanceManager.Application.Contracts;
 using MediatR;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
