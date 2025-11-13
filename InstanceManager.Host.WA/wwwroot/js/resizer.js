@@ -1,21 +1,35 @@
+import interactjs from 'https://cdn.jsdelivr.net/npm/interactjs@1.10.27/+esm';
+
 window.interactJs = {
-    makeResizable: function (dotNetHelper, element) {
-        interact(element)
+    makeResizable: function (dotNetHelper, targetElement, propertyElement) {
+        const computedStyle = getComputedStyle(targetElement);
+        const minWidthVar = computedStyle.getPropertyValue('--dialog-min-width');
+        const minWidth = parseInt(minWidthVar, 10) || 100;
+        let debounceTimeout;
+
+        interactjs(targetElement)
             .resizable({
                 edges: { left: false, right: true, bottom: false, top: false },
 
                 listeners: {
                     move: function (event) {
-                        let target = event.target;
+                        const width = event.rect.width;
 
-                        target.style.width = event.rect.width + 'px';
+                        if (propertyElement) {
+                            propertyElement.style.setProperty('--dialog-width', `${width}px`);
+                        } else {
+                            targetElement.style.width = `${width}px`;
+                        }
 
-                        dotNetHelper.invokeMethodAsync('SetWidth', event.rect.width);
+                        clearTimeout(debounceTimeout);
+                        debounceTimeout = setTimeout(() => {
+                            dotNetHelper.invokeMethodAsync('SetWidth', width);
+                        }, 250);
                     }
                 },
                 modifiers: [
-                    interact.modifiers.restrictSize({
-                        min: { width: 100 }
+                    interactjs.modifiers.restrictSize({
+                        min: { width: minWidth }
                     })
                 ],
                 inertia: true
