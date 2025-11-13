@@ -1,154 +1,141 @@
 using Microsoft.AspNetCore.Components;
 using Radzen;
+using Radzen.Blazor;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace InstanceManager.Host.WA.Components;
-
-/// <summary>
-/// Reusable DataGrid component with built-in search, pagination, and sorting.
-/// Wraps RadzenDataGrid with common functionality.
-/// </summary>
-/// <typeparam name="TItem">The type of items displayed in the grid</typeparam>
-public partial class PaginatedDataGrid<TItem> : ComponentBase
+namespace InstanceManager.Host.WA.Components
 {
-    /// <summary>
-    /// The list of items to display in the grid
-    /// </summary>
-    [Parameter]
-    public List<TItem> Items { get; set; } = new();
-
-    /// <summary>
-    /// Total count of items (for pagination)
-    /// </summary>
-    [Parameter]
-    public int TotalItems { get; set; }
-
-    /// <summary>
-    /// Page size for pagination
-    /// </summary>
-    [Parameter]
-    public int PageSize { get; set; } = 20;
-
-    /// <summary>
-    /// Placeholder text for the search box
-    /// </summary>
-    [Parameter]
-    public string SearchPlaceholder { get; set; } = "Search...";
-
-    /// <summary>
-    /// Current search term
-    /// </summary>
-    [Parameter]
-    public string? SearchTerm { get; set; }
-
-    /// <summary>
-    /// Event callback when search term changes
-    /// </summary>
-    [Parameter]
-    public EventCallback<string?> SearchTermChanged { get; set; }
-
-    /// <summary>
-    /// Event callback when data needs to be loaded (pagination, sorting, filtering)
-    /// </summary>
-    [Parameter]
-    public EventCallback<LoadDataArgs> LoadData { get; set; }
-
-    /// <summary>
-    /// Event callback when search changes (triggers data reload)
-    /// </summary>
-    [Parameter]
-    public EventCallback OnSearchChanged { get; set; }
-
-    /// <summary>
-    /// Selected rows
-    /// </summary>
-    [Parameter]
-    public IList<TItem>? SelectedRows { get; set; }
-
-    /// <summary>
-    /// Event callback when selection changes
-    /// </summary>
-    [Parameter]
-    public EventCallback<IList<TItem>> SelectedRowsChanged { get; set; }
-
-    /// <summary>
-    /// Columns definition
-    /// </summary>
-    [Parameter]
-    public RenderFragment? Columns { get; set; }
-
-    /// <summary>
-    /// Additional filter controls to display next to search
-    /// </summary>
-    [Parameter]
-    public RenderFragment? AdditionalFilters { get; set; }
-
-    /// <summary>
-    /// Allow filtering on the grid
-    /// </summary>
-    [Parameter]
-    public bool AllowFiltering { get; set; } = true;
-
-    /// <summary>
-    /// Allow sorting on the grid
-    /// </summary>
-    [Parameter]
-    public bool AllowSorting { get; set; } = true;
-
-    /// <summary>
-    /// Allow paging on the grid
-    /// </summary>
-    [Parameter]
-    public bool AllowPaging { get; set; } = true;
-
-    /// <summary>
-    /// Selection mode for the grid
-    /// </summary>
-    [Parameter]
-    public DataGridSelectionMode SelectionMode { get; set; } = DataGridSelectionMode.Single;
-
-    private async Task OnLoadData(LoadDataArgs args)
+    public partial class PaginatedDataGrid<TItem> : ComponentBase
     {
-        if (LoadData.HasDelegate)
+        private RadzenDataGrid<TItem> _dataGrid;
+        private bool _isSettingsPanelOpen;
+        private List<ColumnState> _columnStates = new();
+        private bool _columnsInitialized;
+
+        [Parameter]
+        public List<TItem> Items { get; set; } = new();
+
+        [Parameter]
+        public int TotalItems { get; set; }
+
+        [Parameter]
+        public int PageSize { get; set; } = 20;
+
+        [Parameter]
+        public string SearchPlaceholder { get; set; } = "Search...";
+
+        [Parameter]
+        public string? SearchTerm { get; set; }
+
+        [Parameter]
+        public EventCallback<string?> SearchTermChanged { get; set; }
+
+        [Parameter]
+        public EventCallback<LoadDataArgs> LoadData { get; set; }
+
+        [Parameter]
+        public EventCallback OnSearchChanged { get; set; }
+
+        [Parameter]
+        public IList<TItem>? SelectedRows { get; set; }
+
+        [Parameter]
+        public EventCallback<IList<TItem>> SelectedRowsChanged { get; set; }
+
+        [Parameter]
+        public RenderFragment? Columns { get; set; }
+
+        [Parameter]
+        public RenderFragment? AdditionalFilters { get; set; }
+
+        [Parameter]
+        public bool AllowFiltering { get; set; } = true;
+
+        [Parameter]
+        public bool AllowSorting { get; set; } = true;
+
+        [Parameter]
+        public bool AllowPaging { get; set; } = true;
+
+        [Parameter]
+        public DataGridSelectionMode SelectionMode { get; set; } = DataGridSelectionMode.Single;
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            await LoadData.InvokeAsync(args);
+            if (firstRender && _dataGrid.ColumnsCollection.Any() && !_columnsInitialized)
+            {
+                _columnStates = _dataGrid.ColumnsCollection.Select((col, index) => new ColumnState
+                {
+                    Title = col.Title,
+                    PropertyName = col.Property,
+                    Visible = col.Visible,
+                    Order = index
+                }).ToList();
+                _columnsInitialized = true;
+                await InvokeAsync(StateHasChanged);
+            }
         }
-    }
 
-    private async Task OnSelectionChanged(IList<TItem> selectedRows)
-    {
-        SelectedRows = selectedRows;
-
-        if (SelectedRowsChanged.HasDelegate)
+        private async Task OnLoadData(LoadDataArgs args)
         {
-            await SelectedRowsChanged.InvokeAsync(selectedRows);
-        }
-    }
-
-    private void HandleSearchChanged()
-    {
-        if (SearchTermChanged.HasDelegate)
-        {
-            _ = SearchTermChanged.InvokeAsync(SearchTerm);
+            if (LoadData.HasDelegate)
+            {
+                await LoadData.InvokeAsync(args);
+            }
         }
 
-        if (OnSearchChanged.HasDelegate)
+        private async Task OnSelectionChanged(IList<TItem> selectedRows)
         {
-            _ = OnSearchChanged.InvokeAsync();
-        }
-    }
+            SelectedRows = selectedRows;
 
-    private async Task HandleClearSearch()
-    {
-        SearchTerm = null;
-
-        if (SearchTermChanged.HasDelegate)
-        {
-            await SearchTermChanged.InvokeAsync(SearchTerm);
+            if (SelectedRowsChanged.HasDelegate)
+            {
+                await SelectedRowsChanged.InvokeAsync(selectedRows);
+            }
         }
 
-        if (OnSearchChanged.HasDelegate)
+        private void HandleSearchChanged()
         {
-            await OnSearchChanged.InvokeAsync();
+            if (SearchTermChanged.HasDelegate)
+            {
+                _ = SearchTermChanged.InvokeAsync(SearchTerm);
+            }
+
+            if (OnSearchChanged.HasDelegate)
+            {
+                _ = OnSearchChanged.InvokeAsync();
+            }
+        }
+
+        private async Task HandleClearSearch()
+        {
+            SearchTerm = null;
+
+            if (SearchTermChanged.HasDelegate)
+            {
+                await SearchTermChanged.InvokeAsync(SearchTerm);
+            }
+
+            if (OnSearchChanged.HasDelegate)
+            {
+                await OnSearchChanged.InvokeAsync();
+            }
+        }
+
+        private async Task HandleSettingsChanged()
+        {
+            foreach (var columnState in _columnStates)
+            {
+                var column = _dataGrid.ColumnsCollection.FirstOrDefault(c => c.Property == columnState.PropertyName);
+                if (column != null)
+                {
+                    column.Visible = columnState.Visible;
+                    column.OrderIndex = columnState.Order;
+                }
+            }
+            await _dataGrid.Reload();
         }
     }
 }

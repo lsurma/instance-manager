@@ -20,9 +20,12 @@
     {
         @AdditionalFilters
     }
+
+    <FluentButton IconStart="@(new Size20.Settings())" OnClick="@(() => _isSettingsPanelOpen = true)" />
 </FluentStack>
 
-<RadzenDataGrid Data="@Items"
+<RadzenDataGrid @ref="_dataGrid"
+                Data="@Items"
                 LoadData="@OnLoadData"
                 Count="@TotalItems"
                 TItem="TItem"
@@ -38,3 +41,7 @@
         @Columns
     </Columns>
 </RadzenDataGrid>
+
+<DataGridSettings @bind-IsOpen="@_isSettingsPanelOpen"
+                  Columns="@_columnStates"
+                  OnSettingsChanged="HandleSettingsChanged" />

@@ -1,0 +1,25 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+@using Microsoft.FluentUI.AspNetCore.Components.Icons
+
+<FluentPanel @bind:IsOpen="@IsOpen" Width="350px" OnDismiss="@HandleDismiss">
+    <div style="padding: 20px;">
+        <h3>Grid Settings</h3>
+
+        <div style="margin-top: 20px;">
+            <h5>Column Visibility</h5>
+            @foreach (var column in Columns)
+            {
+                <FluentCheckbox @bind-Value="@column.Visible" Label="@column.Title" @onchange="NotifyChanges" />
+            }
+        </div>
+
+        <div style="margin-top: 20px;">
+            <h5>Column Order</h5>
+            <FluentSortableList @bind-Items="Columns" OnUpdate="@HandleColumnOrderUpdate">
+                <ItemTemplate>
+                    <FluentListItem>@context.Title</FluentListItem>
+                </ItemTemplate>
+            </FluentSortableList>
+        </div>
+    </div>
+</FluentPanel>
