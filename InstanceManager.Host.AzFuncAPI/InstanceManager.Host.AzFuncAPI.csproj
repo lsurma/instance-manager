@@ -20,6 +20,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.Identity.Web" Version="4.0.1" />
+        <PackageReference Include="Scriban" Version="6.5.0" />
     </ItemGroup>
 
     <ItemGroup>
