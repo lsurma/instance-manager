@@ -1,0 +1,20 @@
+@page "/datagrid-settings-test"
+
+<h3>DataGrid Settings Test Page</h3>
+
+<PaginatedDataGrid TItem="DataGridTestItem"
+                   Items="@_items"
+                   TotalItems="@_totalItems"
+                   PageSize="@_pageSize"
+                   LoadData="OnLoadData">
+    <Columns>
+        <RadzenDataGridColumn TItem="DataGridTestItem" Property="Id" Title="ID" />
+        <RadzenDataGridColumn TItem="DataGridTestItem" Property="Name" Title="Name" />
+        <RadzenDataGridColumn TItem="DataGridTestItem" Property="Description" Title="Description" />
+        <RadzenDataGridColumn TItem="DataGridTestItem" Property="CreatedDate" Title="Created Date">
+            <Template Context="item">
+                @item.CreatedDate.ToString("yyyy-MM-dd")
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</PaginatedDataGrid>
