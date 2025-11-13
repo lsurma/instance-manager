@@ -1,16 +1,24 @@
 using System.Text.Json;
+using InstanceManager.Application.Contracts.Modules.Mjml;
 using InstanceManager.Host.AzFuncAPI.Controllers.Models;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
-using Scriban;
 
 namespace InstanceManager.Host.AzFuncAPI.Controllers;
 
 public class MjmlController
 {
+    private readonly IMediator _mediator;
+
+    public MjmlController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
     [Function("Mjml/Render")]
-    public static async Task<IActionResult> Render(
+    public async Task<IActionResult> Render(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "mjml/render")]
         HttpRequest req)
     {
@@ -21,9 +29,14 @@ public class MjmlController
             return new BadRequestObjectResult("Html and Variables are required");
         }
 
-        var template = Template.Parse(mjmlRequest.Html);
-        var result = await template.RenderAsync(JsonSerializer.Deserialize<object>(mjmlRequest.Variables));
+        var command = new RenderTemplateCommand
+        {
+            Html = mjmlRequest.Html,
+            Variables = mjmlRequest.Variables
+        };
 
-        return new OkObjectResult(new { html = result });
+        var result = await _mediator.Send(command);
+
+        return new OkObjectResult(result);
     }
 }

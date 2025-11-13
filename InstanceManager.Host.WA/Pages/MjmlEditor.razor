@@ -3,6 +3,8 @@
 @inject HttpClient Http
 @using System.Text.Json.Serialization
 @using System.Net.Http.Json
+@using BlazorMonaco
+@using BlazorMonaco.Editor
 @implements IDisposable
 
 <h3>MJML Editor</h3>
@@ -11,9 +13,9 @@
     <div class="row">
         <div class="col-6">
             <label>MJML</label>
-            <textarea class="form-control" @bind="MjmlInput" @bind:event="oninput" rows="20" style="width: 100%; height: calc(100vh - 200px);"></textarea>
+            <StandaloneCodeEditor @ref="mjmlEditor" ConstructionOptions="MjmlEditorConstructionOptions" OnDidChangeContent="OnMjmlContentChanged" />
             <label>Variables</label>
-            <textarea class="form-control" @bind="Variables" @bind:event="oninput" rows="5"></textarea>
+            <StandaloneCodeEditor @ref="variablesEditor" ConstructionOptions="VariablesEditorConstructionOptions" OnDidChangeContent="OnVariablesContentChanged" />
         </div>
         <div class="col-6">
             <div class="btn-group" role="group" aria-label="Preview size">
@@ -27,6 +29,9 @@
 </div>
 
 @code {
+    private StandaloneCodeEditor mjmlEditor = null!;
+    private StandaloneCodeEditor variablesEditor = null!;
+
     private string previewWidth = "100%";
 
     private void SetPreviewSize(string width)
@@ -34,61 +39,84 @@
         previewWidth = width;
     }
 
-    private string _mjmlInput = @"""
-                               <mjml>
-                                 <mj-body>
-                                   <mj-section>
-                                     <mj-column>
-                                       <mj-text>
-                                         Hello World!
-                                       </mj-text>
-                                     </mj-column>
-                                   </mj-section>
-                                 </mj-body>
-                               </mjml>
-                               """;
+    private StandaloneEditorConstructionOptions MjmlEditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            Language = "html",
+            Value = @"<mjml>
+                  <mj-body>
+                    <mj-section>
+                      <mj-column>
+                        <mj-text>
+                          Hello {{ name }}!
+                        </mj-text>
+                      </mj-column>
+                    </mj-section>
+                  </mj-body>
+                </mjml>",
+            AutomaticLayout = true
+        };
+    }
 
-    private string _variables = "{\n  \"name\": \"World\"\n}";
+    private StandaloneEditorConstructionOptions VariablesEditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            Language = "json",
+            Value = @"{
+                      ""name"": ""World""
+                    }",
+            AutomaticLayout = true
+        };
+    }
+
     private string htmlOutput = "";
     private Timer? _debounceTimer;
     private const int DebounceTimeMs = 500;
 
-    private string MjmlInput
+    protected override void OnInitialized()
     {
-        get => _mjmlInput;
-        set
+        _debounceTimer = new Timer(async _ => await OnTimerCallback(), null, Timeout.Infinite, Timeout.Infinite);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
         {
-            _mjmlInput = value;
-            // Reset the timer on each input
-            _debounceTimer?.Change(DebounceTimeMs, Timeout.Infinite);
+            await OnTimerCallback();
         }
     }
 
-    private string Variables
+    public void Dispose()
     {
-        get => _variables;
-        set
-        {
-            _variables = value;
-            _debounceTimer?.Change(DebounceTimeMs, Timeout.Infinite);
-        }
-    }
-
-    protected override async void OnInitialized()
-    {
-        _debounceTimer = new Timer(async _ => await OnTimerCallback(), null, DebounceTimeMs, Timeout.Infinite);
+        _debounceTimer?.Dispose();
     }
 
     private async Task OnTimerCallback()
     {
-        await ConvertMjmlToHtml();
+        var mjml = await mjmlEditor.GetValue();
+        var variables = await variablesEditor.GetValue();
+        await ConvertMjmlToHtml(mjml, variables);
     }
 
-    private async Task ConvertMjmlToHtml()
+    private Task OnMjmlContentChanged()
+    {
+        _debounceTimer?.Change(DebounceTimeMs, Timeout.Infinite);
+        return Task.CompletedTask;
+    }
+
+    private Task OnVariablesContentChanged()
+    {
+        _debounceTimer?.Change(DebounceTimeMs, Timeout.Infinite);
+        return Task.CompletedTask;
+    }
+
+    private async Task ConvertMjmlToHtml(string mjml, string variables)
     {
         try
         {
-            var mjmlResult = await JSRuntime.InvokeAsync<MjmlResult>("mjml", _mjmlInput);
+            var mjmlResult = await JSRuntime.InvokeAsync<MjmlResult>("mjml", mjml);
 
             if (mjmlResult.Errors.Length > 0)
             {
@@ -97,7 +125,7 @@
             }
             else
             {
-                var response = await Http.PostAsJsonAsync("http://localhost:7071/api/mjml/render", new { html = mjmlResult.Html, variables = _variables });
+                var response = await Http.PostAsJsonAsync("http://localhost:7071/api/mjml/render", new { html = mjmlResult.Html, variables });
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -130,10 +158,5 @@
     {
         [JsonPropertyName("html")]
         public string Html { get; set; } = "";
-    }
-
-    public void Dispose()
-    {
-        _debounceTimer?.Dispose();
     }
 }
